@@ -1,0 +1,447 @@
+\documentclass[12pt]{article}
+
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{tipa}
+\usepackage{ot-tableau}
+\usepackage[margin=1in]{geometry}
+
+\DeclareCaptionLabelFormat{parensnum}{(#2)}
+\captionsetup[figure]{labelformat=parensnum,
+                      labelsep=space,
+                      justification=raggedright,
+                      singlelinecheck=false}
+
+\newcommand{\ident}{\textsc{Ident}}
+
+\newcommand{\maxvplus}{\textsc{MaxFinalV}}
+\newcommand{\maxplusv}{\textsc{MaxInitialV}}
+\newcommand{\maxc}{\textsc{Max}}
+\newcommand{\ftbin}{\textsc{FtBin}}
+\newcommand{\ssp}{\textsc{SSP}}
+\newcommand{\dep}{\textsc{Dep}}
+\newcommand{\onset}{\textsc{Onset}}
+\newcommand{\nocoda}{\textsc{NoCoda}}
+
+\newcommand{\pref}[1]{(\ref{#1})}
+
+\title{Vowel Elision in Yoruba Collocations}
+\author{Hemant Gouni}
+
+\begin{document}
+
+\maketitle
+
+In Yoruba, deletion occurs at morpheme boundaries. Specifically, when two
+vowels become adjacent via concatenation of Yoruba morphemes, the first vowel
+is generally deleted. This is shown in the following pairs of underlying and
+surface forms, as shown below in \pref{fig:deletion-simple},
+\pref{fig:deletion-except-1}, and \pref{fig:deletion-except-2}.
+
+\begin{figure}[h]
+\caption{Deletion in Yoruba}
+\label{fig:deletion-simple}
+\begin{tabular}{c|c|c|c}
+    \textbf{Underlying} & \textbf{Surface} & \textbf{Underlying} & \textbf{Surface}\\
+    \textipa{/ow\'o-k\'i-ow\'o/} & \textipa{[ow\'ok\'ow\'o]} & \textipa{/\textdyoghlig{}\'o-\`Ew\`u/} & \textipa{[\textdyoghlig{}\'Ew\`u]}\\
+    \textipa{/OmO-k\'i-OmO/} & \textipa{[OmOk\'OmO]} & \textipa{/ra-\`Og\`Ed\`E/} & \textipa{[r\`Og\`Ed\`E]}\\
+    \textipa{/se-ol\'u/} & \textipa{[sol\'u]} & \textipa{/n\'i-oko/} & \textipa{[l\'oko]}\\
+    \textipa{/\textdyoghlig{}E-ed\'e/} & \textipa{[\textdyoghlig{}ed\'e]} & \textipa{/s\'i-O\textdyoghlig{}\`a/} & \textipa{[s\'O\textdyoghlig{}\`a]}\\
+\end{tabular}
+\end{figure}
+
+% for handling [bimo], markedness constraint for preferring vowels to be
+% approximately in the same place when both surrounding consonants share place?
+
+However, [i] is always elided, regardless of whether it is the first or second
+vowel in the sequence, as seen in \pref{fig:deletion-except-1}.
+
+\begin{figure}[h]
+\caption{Deletion of [i]}
+\label{fig:deletion-except-1}
+\begin{tabular}{c|c|c|c}
+    \textbf{Underlying} & \textbf{Surface} & \textbf{Underlying} & \textbf{Surface}\\
+    \textipa{/gb\'e-in\'O/} & \textipa{[gb\'en\'O]} & \textipa{/wo-il\`E/} & \textipa{[wol\`E]}\\
+    \textipa{/gba-iS\'E/} & \textipa{[gbaS\'E]} & \textipa{/\textdyoghlig{}\'i-aSO/} & \textipa{[\textdyoghlig{}\'aSO]}\\
+\end{tabular}
+\end{figure}
+
+However, when /u/ occurs at the end of the first morpheme it is always deleted,
+unless followed by /i/ in which case /i/ is deleted, as seen in
+\pref{fig:deletion-except-2}.
+
+\begin{figure}[h]
+\caption{Deletion of [u], except before [i]}
+\label{fig:deletion-except-2}
+\begin{tabular}{c|c|c|c}
+    \textbf{Underlying} & \textbf{Surface} & \textbf{Underlying} & \textbf{Surface}\\
+    \textipa{/\textdyoghlig{}u-igi/} & \textipa{[\textdyoghlig{}ugi]} & \textipa{/ru-epo/} & \textipa{[repo]}\\
+    \textipa{/lu-il\`E/} & \textipa{[lul\`E]} & \textipa{/bu-omi/} & \textipa{[bomi]}\\
+    \textipa{/b\'u-Oba/} & \textipa{[b\'Oba]}\\
+\end{tabular}
+\end{figure}
+
+We can describe these three distinct groups of data straightforwardly. In
+Yoruba, when two vowels become adjacent via concatenation of Yoruba morphemes,
+the first vowel is deleted, unless the second vowel is less sonorous,
+in which case it is deleted. This deletion occurs in order to ensure that
+syllables always have an onset. This generalization can be analyzed from an
+optimality-theoretic viewpoint. To begin, the phenomena in
+\pref{fig:deletion-simple} can be naturally accounted for with a prohibition
+against onsetless syllables, so one of the conjoined vowels is deleted to
+prevent such a syllable from surfacing. Specifically, a `V`, with any number of
+`C`s after it, is not a valid candidate for a syllable, because it lacks an
+onset. We can codify this observation via the constraint \onset, which
+precisely moderates against candidate surface forms with syllables which lack
+an onset. This is defined in \pref{def:onset-and-maxc}.
+
+% \textbf{make sure we're formulating the foot binarity effect correctly}
+
+% \textbf{cite Yoruba Vowel Elisision: Minimality Effects}
+
+\begin{figure}[h]
+    \caption{Definitions for \onset{} and \maxc.}
+    \label{def:onset-and-maxc}
+    \begin{center}
+        \onset\\
+        Assign one violation mark for every syllable which lacks an onset.\\
+        \vspace{1em}
+        \maxc\\
+        Assign one violation mark for every segment that is present in the
+        underlying form but not in the surface form.
+    \end{center}
+\end{figure}
+
+We can now establish a ranking between \onset{} and \maxc, which is the
+classic faithfulness constraint responsible for preventing deletion and which
+also has a definition in \pref{def:onset-and-maxc}. We will see later that
+\maxc{} is used as a simplifying assumption, and that its effect here can
+be accounted for better by a couple more complex constraints.
+
+\begin{figure}[h]
+    \caption{\onset{} >> \maxc}
+    \label{tableau:onset-wins}
+    \begin{tableau}{c|c}
+        \inp{\ips{\textdyoghlig{}E-ed\'e}}       \const{\onset} \const{\maxc}
+        \cand[\Optimal]{.\textdyoghlig{}e.d\'e.} \vio{}         \vio{*}
+        \cand{.\textdyoghlig{}E.e.d\'e.}         \vio{*!}       \vio{}
+    \end{tableau}
+\end{figure}
+
+This tableau proves that Yoruba prefers to delete one of the conjoined vowels
+rather than create a syllable without an onset. However, a question immediately
+arises: there is an unconsidered candidate, in this tableau, one where the
+morpheme-initial vowel [e] was deleted instead of the morpheme-final vowel
+\textipa{[E]}, to create the candidate surface form
+\textipa{[\textdyoghlig{}E.d\'e]}. This also does not violate \onset, and has
+an equal number of violations of \maxc, as shown in the tableau in
+\pref{tableau:onset-maxc-tie}. Why didn't Yoruba choose this surface form
+instead?
+
+\begin{figure}[h]
+    \caption{A tie between two candidates!}
+    \label{tableau:onset-maxc-tie}
+    \begin{tableau}{c|c}
+        \inp{\ips{\textdyoghlig{}E-ed\'e}} \const{\onset} \const{\maxc}
+        \cand{.\textdyoghlig{}e.d\'e.}     \vio{}         \vio{*}
+        \cand{.\textdyoghlig{}E.d\'e}      \vio{}         \vio{*}
+    \end{tableau}
+\end{figure}
+
+The answer lies in Yoruba's preference for preserving morpheme-initial vowels
+versus morpheme-final vowels. Cross-linguistically, onsets are more important
+than codas-- looking to the corpus of Optimality Theory constraints, for
+instance, we see that \onset{} exists to regulate against syllables
+\textit{without} onsets, but \nocoda{} exists to regulate against syllables
+\textit{with} codas. Given this cross-linguistic asymmetry, it is natural to
+conclude that Yoruba's treatment of vowels at morpheme boundaries (which are
+also syllable boundaries) follows a similar pattern.
+
+To break the tie in \pref{tableau:onset-maxc-tie}, we introduce a morphemic
+faithfulness constraint against vowel deletion at the beginnings of morpheme
+boundaries. We call this constraint \maxplusv. Though this means that we must
+consult morphology in order to determine correct phonological outputs,
+observing the phenomenon in \pref{fig:deletion-simple}, we see that it is
+fundamentally a morphological one, so we posit that relying on morphology here
+presents the most productive path forward. We also propose its sibling
+constraint, \maxvplus, which prohibits vowels from being deleted in
+morpheme-final positions. We define both of these constraints in
+\pref{def:maxvplus-and-maxplusv}.
+
+% \textbf{cite the paper from class as justification: onsets are generally more
+% important than codas, onset vs nocoda}
+
+\begin{figure}[h]
+    \caption{Definitions for \maxplusv{} and \maxvplus.}
+    \label{def:maxvplus-and-maxplusv}
+    \begin{center}
+        % Ident vowel-end-of-morpheme??
+        \maxplusv\\
+        Assign one violation mark for every vowel that is present at the
+        beginning of a morpheme boundary in the UR and is not present in the
+        SR.\\
+        \vspace{1em}
+        \maxvplus\\
+        Assign one violation mark for every vowel that is present at the end of
+        a morpheme boundary in the UR and is not present in the SR.
+    \end{center}
+\end{figure}
+
+The tableau establishing their relative ranking is shown in
+\pref{tableau:maxplusv-wins}.
+
+\begin{figure}[h]
+\caption{\maxplusv{} >> \maxvplus}
+\label{tableau:maxplusv-wins}
+\begin{tableau}{c|c}
+    \inp{\ips{\textdyoghlig{}E-ed\'e}}    \const{\maxplusv} \const{\maxvplus}
+    \cand[\Optimal]{\textdyoghlig{}ed\'e} \vio{}            \vio{*}
+    \cand{\textdyoghlig{}Ed\'e}           \vio{*!}          \vio{}
+\end{tableau}
+\end{figure}
+
+As \pref{tableau:maxplusv-wins} shows, Yoruba prefers morpheme final vowels to
+be deleted over morpheme initial ones, because the deletion of the latter
+constitutes a graver violation of \maxplusv. What this means is that we're not
+\textit{really} dealing with \maxc{} as our primary faithfulness constraint, as
+was implied by \pref{tableau:onset-wins}, but rather with our two faithfulness
+constraints governing morpheme-initial versus morpheme-final vowel deletion. We
+show an updated version of the tableau from \pref{tableau:onset-wins} in
+\pref{tableau:onset-wins-v2} to account for this.
+
+\begin{figure}[h]
+    \caption{\onset{} >> \maxplusv}
+    \label{tableau:onset-wins-v2}
+    \begin{tableau}{c|c}
+        \inp{\ips{\textdyoghlig{}E-ed\'e}}       \const{\onset} \const{\maxplusv}
+        \cand[\Optimal]{.\textdyoghlig{}e.d\'e.} \vio{}         \vio{*}
+        \cand{.\textdyoghlig{}E.e.d\'e.}         \vio{*!}       \vio{}
+    \end{tableau}
+\end{figure}
+
+Our analysis so far accounts for the phenomena in \pref{fig:deletion-simple},
+but not the phenomena in \pref{fig:deletion-except-1} or
+\pref{fig:deletion-except-2}. We proceed, now, to analyze the first of these, in
+which [i] is deleted regardless of whether it the morpheme initial or final
+sound. One possible explanation as to why this is the case might be some
+quality of the vowels themselves-- the frontness or backness of the vowels
+appears to have no immediately discernible pattern with respect to deletion, so
+we might try vowel height. Indeed, height appears to be correlated: [u] and
+[i], which are both high vowels, are involved in the exceptional deletion
+cases! We analyze both of these instances through the mechanism of sonority,
+which offers an explanation for high vowels being involved in deletion-- they
+are less sonorous. The sonority scale of vowels has been discussed in prior
+work[\textbf{cite the quality-sensitive stress paper}, wikipedia article?].
+This scale is shown in \pref{table:vowel-sonority}.
+
+\begin{figure}[h]
+    \caption{The vowel sonority scale (ordered by decreasing sonority)}
+    \label{table:vowel-sonority}
+    \begin{tabular}{c|c|c}
+        \textbf{low} (\textsc{most} sonorous) & \textbf{mid} & \textbf{high} (\textsc{least} sonorous)\\
+        /a/ & \textipa{/e E o O/} & /i u/\\
+    \end{tabular}
+\end{figure}
+
+This helps inform why, for the data in \pref{fig:deletion-except-1}, [i] is
+always elided, even though it appears morpheme-initially underlyingly.
+Specifically, the language prefers to delete less sonorous vowels such as
+[i] over more sonorous vowels. We can codify this intuition into a faithfulness
+constraint, \ssp. This constraint is defined in \pref{def:ssp}.
+
+% use smth like PEAK-PROMINENCE here instead?
+\begin{figure}[h]
+    \caption{Definition of \ssp}
+    \label{def:ssp}
+    \begin{center}
+        \ssp\\
+        For each vowel in the surface form, assign one additional violation
+        mark for every increment of distance away from most sonorous level of
+        the sonority scale.
+    \end{center}
+\end{figure}
+
+We can now attempt to determine the ranking of this constraint that results in
+the phenomenon seen in \pref{fig:deletion-except-1} while preserving the
+phenomenon in \pref{fig:deletion-simple}.
+
+\begin{figure}[h!]
+    \caption{\ssp{} >> \maxplusv}
+    \label{tableau:ssp-wins}
+    \begin{tableau}{c|c}
+        \inp{\ips{gb\'e-in\'O}}    \const{\ssp} \const{\maxplusv}
+        \cand[\Optimal]{gb\'en\'O} \vio{**}     \vio{*}
+        \cand{gb\'in\'O}           \vio{***!}   \vio{}
+    \end{tableau}
+\end{figure}
+
+The tableau in \pref{tableau:ssp-wins} shows that the language prefers to
+delete a morpheme-initial vowel over a more sonorous vowel (\textipa{[\'e]}
+rather than \textipa{[\'i]}). This ranking completely account for the pairs
+shown in \pref{fig:deletion-except-1}. We would additionally like to rank
+\onset{} and \ssp{} against each other, but with the data we have, they cannot
+be. For valid surface forms, only deletion ever occurs in order to satisfy
+\onset{} or \ssp. Every time a vowel is deleted, violations of either of these
+constraints cannot increase (for \onset, because there's one less syllable
+nucleus which requires an onset, and for \ssp, because there's one less
+potentially non-low vowel). As a result, we cannot attempt a ranking between
+\onset{} and \ssp{} either.
+
+We proceed to account, now, for the
+final set of exceptions shown in \pref{fig:deletion-except-2}. We can actually
+account for this phenomenon with a slight modification to our sonority scale,
+ranking [u] above [i] within it.
+
+\begin{figure}[h]
+    \caption{The vowel sonority scale (ordered by decreasing sonority)}
+    \label{table:vowel-sonority-v2}
+    \begin{tabular}{c|c|c|c}
+        \textbf{low} (\textsc{most} sonorous) & \textbf{mid} & \textbf{mid} &
+            \textbf{high} (\textsc{least} sonorous)\\
+        /a/ & \textipa{/e E o O/} & /u/ & /i/\\
+    \end{tabular}
+\end{figure}
+
+This modification enables us to account for the phenomena in
+\pref{fig:deletion-except-2} by ranking /i/ as lower in the sonority scale of
+Yoruba. This elegantly deals with the issue of /i/ deletion at the beginning of
+the second vowel being preferred over /u/ deletion at the end of the first
+vowel, because, as discussed before, a violation of \ssp{} represents a
+maximally severe violation of the language's phonology. This is explicated in
+the tableau shown here.
+
+% \begin{figure}[h]
+%     \caption{Definition for \ssp{} (v2)}
+%     \label{def:ssp-v2}
+%     \begin{center}
+%         \ssp\\
+%         The Yoruba vowel sonority scale is defined as in 
+%     \end{center}
+% \end{figure}
+
+\begin{figure}[h]
+    \caption{\ssp >> \maxplusv (part 2)}
+    \label{tableau:ssp-wins-v2}
+    \begin{tableau}{c|c}
+        \inp{\ips{lu-\`ilE}}    \const{\ssp} \const{\maxplusv}
+        \cand[\Optimal]{lul\`E} \vio{***}    \vio{*}
+        \cand{l\`il\`E}         \vio{****!}  \vio{}
+    \end{tableau}
+\end{figure}
+
+As we can see here, the fact that morpheme-final [u] deletion is dispreferred
+over morpheme-initial [i] deletion (which violates a fairly high-ranked
+\maxplusv{} constraint) in the phenomena shown in \pref{fig:deletion-except-2}
+is straightforwardly dealt with by taking the language-generic SSP ranking and
+theorizing that Yoruba possesses a specialized variant of it, as many languages
+do.
+
+We now show a summary tableau for the input \textipa{/\textdyoghlig{}u-igi/}.
+
+\begin{figure}[h!]
+    \caption{Summary Tableau, attampt 1}
+    \label{tableau:summary-one}
+    \begin{tableau}{c:c|c|c}
+        \inp{\ips{\textdyoghlig{}u-igi}}         \const{\onset} \const{\ssp}   \const{\maxplusv} \const{\maxvplus}
+        \cand[\Optimal]{.\textdyoghlig{}u.gi.}   \vio{}         \vio{****!*}   \vio{*}           \vio{}
+        \cand{.\textdyoghlig{}u.i.gi.}           \vio{*!}       \vio{*******}  \vio{}            \vio{}
+        \cand{.\textdyoghlig{}i.gi.}             \vio{}         \vio{******!}  \vio{}            \vio{*}
+        \cand{.\textdyoghlig{}a.gi.}             \vio{}         \vio{***}      \vio{*}           \vio{*}
+    \end{tableau}
+\end{figure}
+
+We notice that candidate three is a winner threatening loser! It deletes both
+of the non-sonorous vowels at the boundary of the two morphemes, and instead
+epenthesizes an [a], which is a very sonorous vowel, incurring no violations of
+\ssp. In order to prevent this winner-threatening loser, we introduce a
+high-ranked \dep{} constraint. This is supported by our data, because we never
+see epenthesis. We now show a simple ranking tableau that represents this argument.
+
+\begin{figure}[h]
+    \caption{\dep{} >> \ssp}
+    \label{tableau:dep-wins}
+    \begin{tableau}{c|c}
+        \inp{\ips{\textdyoghlig{}u-igi}}       \const{\dep} \const{\ssp}
+        \cand[\Optimal]{.\textdyoghlig{}u.gi.} \vio{}       \vio{*****}
+        \cand{.\textdyoghlig{}a.gi.}           \vio{*!}     \vio{***}
+    \end{tableau}
+\end{figure}
+
+We would additionally like to show a ranking for \dep{} over \onset, or
+\onset{} over \dep, but unfortunately, this is impossible: we would need to
+come up with a winning candidate that violates either \onset{} or \dep{},
+neither of which is ever seen in the data.
+
+Note that our winner-threatening loser could also have been created via a
+featural change-- we can deal with this in a similar way, by introducing a
+high-ranked \ident{} constraint. We show this below. For similar reasons to
+that for \dep, \ident{} cannot be ranked against \onset. \dep{} and \ident{}
+also cannot be ranked against each other, because we never see a surface
+form that uses either.
+
+\begin{figure}[h]
+    \caption{\ident{} >> \ssp}
+    \label{tableau:ident-wins}
+    \begin{tableau}{c|c}
+        \inp{\ips{\textdyoghlig{}u-igi}}       \const{\ident} \const{\ssp}
+        \cand[\Optimal]{.\textdyoghlig{}u.gi.} \vio{}         \vio{*****}
+        \cand{.\textdyoghlig{}a.gi.}           \vio{*!}       \vio{***}
+    \end{tableau}
+\end{figure}
+
+And, finally, we can show our corrected summary tableau.
+
+\begin{figure}[h]
+    \caption{Final Summary Tableau}
+    \label{tableau:summary-two}
+    \resizebox{\textwidth}{!}{
+    \begin{tableau}{c:c|c:c|c|c}
+        \inp{\ips{\textdyoghlig{}u-igi}}       \const{\ident} \const{\dep} \const{\onset} \const{\ssp}   \const{\maxplusv} \const{\maxvplus}
+        \cand[\Optimal]{.\textdyoghlig{}u.gi.} \vio{}         \vio{}       \vio{}         \vio{*****}    \vio{*}           \vio{}
+        \cand{.\textdyoghlig{}u.i.gi.}         \vio{}         \vio{}       \vio{*!}       \vio{******!*} \vio{}            \vio{}
+        \cand{.\textdyoghlig{}i.gi.}           \vio{}         \vio{}       \vio{}         \vio{******!}  \vio{}            \vio{*}
+        \cand{.\textdyoghlig{}a.gi.}           \vio{*!}       \vio{*!}     \vio{}         \vio{***}      \vio{*}           \vio{*}
+    \end{tableau}}
+\end{figure}
+
+Here, our previous winner-threatening-loser has a fatal violation of the
+undominated \dep{} constraint, and so no longer threatens the winner!
+We now have a complete ranking that accounts for all the data shown in
+\pref{fig:deletion-simple}, \pref{fig:deletion-except-1}, and
+\pref{fig:deletion-except-2}.
+
+\begin{figure}[h]
+\caption{Yoruba Surface Forms}
+\label{fig:data}
+\begin{tabular}{c c c c}
+    \textbf{Word} & \textbf{Gloss} & \textbf{Word} & \textbf{Gloss}\\
+    \textipa{ow\'o} & money & \textipa{k\'i} & any\\
+    \textipa{OmO} & child & se & cook\\
+    \textipa{ol\'u} & mushrooms & \textipa{\textdyoghlig{}E} & eat\\
+    \textipa{ed\'e} & shrimp & \textipa{\textdyoghlig{}\'o} & burn\\
+    \textipa{\`Ew\`u} & clothing & \textipa{Ra} & buy\\
+    \textipa{\`Og\`Ed\`E} & banana & \textipa{n\'i} & at\\
+    \textipa{s\'i} & to & \textipa{O\textdyoghlig{}\`a} & market\\
+    \textipa{ow\'ok\'ow\'o} & any money at all | bad money & \textipa{\textdyoghlig{}ed\'e} & eat shrimp\\
+    \textipa{OmOk\'OmO} & any child at all | bad child & \textipa{sol\'u} & cook mushrooms\\
+    \textipa{\textdyoghlig{}\'Ew\`u} & burn clothing & \textipa{R\`Og\`Ed\`E} & buy bananas\\
+    \textipa{l\'oko} & at the farm & \textipa{s\'O\textdyoghlig{}\`a} & to the market\\
+    \textipa{gb\'e} & lift & \textipa{in\'O} & lamp\\
+    \textipa{gba} & take & \textipa{iS\'E} & job\\
+    \textipa{wo} & look & \textipa{il\`E} & ground\\
+    \textipa{\textdyoghlig{}\'i} & steal & \textipa{aSO} & clothes\\
+    \textipa{gb\'en\'O} & lift the lamp & \textipa{gbaS\'E} & take a job\\
+    \textipa{wol\`E} & look at the ground & \textipa{\textdyoghlig{}\'aSO} & steal clothes\\
+    \textipa{\textdyoghlig{}u} & throw & \textipa{igi} & stick\\
+    \textipa{lu} & hit & \textipa{il\`E} & ground\\
+    \textipa{bu} & take & \textipa{omi} & water\\
+    \textipa{Ru} & carry & \textipa{epo} & oil\\
+    \textipa{b\'u} & abuse & \textipa{Oba} & king\\
+    \textipa{\textdyoghlig{}ugi} & throw a stick & \textipa{lul\`E} & hit the ground\\
+    \textipa{bomi} & take water & \textipa{Repo} & carry oil\\
+    \textipa{b\'Oba} & abuse the king & \textipa{b\'i} & have\\
+    \textipa{b\'imO} & have a baby\\
+\end{tabular}
+\end{figure}
+
+\end{document}
