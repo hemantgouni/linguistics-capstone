@@ -1,0 +1,48 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+
+\title{A computational analysis of vowel elision in Yoruba collocations}
+\author{Hemant Gouni}
+
+\begin{document}
+
+\maketitle
+
+In Yoruba, deletion occurs at morpheme boundaries. Specifically, when two
+vowels become adjacent via concatenation of Yoruba morphemes, the first vowel
+is generally deleted. However, [i] is always elided, regardless of whether it
+is the first or second vowel in the sequence. Furthermore, however, when /u/
+occurs at the end of the first morpheme it is always deleted, unless followed
+by /i/ in which case /i/ is deleted. This is a well-known phenomenon to which
+I provided an Optimality-Theoretic analysis in my previous paper.
+
+I would like to extend this work in a further paper, not necessarily by
+refining the theoretical basis of the analysis, but by offering a computational
+interpretation of it. Specifically, I would like to create a program which,
+when given a Yoruba underlying representation, creates the appropriate surface
+form using the constraints and rankings derived in my analysis. This would be
+an interesting project to explore because it may offer some insight into the
+mechanical aspects of Optimality Theory which are not often addressed in the
+literature. For instance, Optimality Theory relies on \textsc{Gen}, a mechanism
+that produces all posssible surface forms from a given underlying one. These
+forms are then evaluated in parallel against a given constraint ranking, with
+the best ranked one being chosen as the winner. However, clearly, \textsc{Gen}
+cannot truly produce all possible candidate output forms, because this would
+take infinite time. Determining a heuristic that approximates \textsc{Gen}'s
+functionality efficiently would be one such interesting aspect of this work.
+The analysis from my previous paper would merely be used as a running example
+to motivate and validate the results of the computational analysis, because I
+am already familiar with it.
+
+To summarize, the question I want to pursue is this: "What additional
+considerations must be added to a standard Optimality-theoretic analysis in
+order to make it amenable to automation?" I plan to start this work by
+surveying any previous research on computer-aided phonological analysis,
+particularly in the context of Optimality Theory. I will then attempt to write
+my own computational analysis, perhaps using a language especially well-suited
+to constraint-based programming like Prolog or Haskell, if I can find a way to
+translate the necessary constructs (between my analysis and the language)
+appropriately. If I succeed at doing this, I will then embark on the more
+
+\end{document}
