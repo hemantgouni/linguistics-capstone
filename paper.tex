@@ -6,6 +6,9 @@
 \usepackage{ot-tableau}
 \usepackage[margin=1in]{geometry}
 
+\usepackage{biblatex}
+\addbibresource{references.bib}
+
 \DeclareCaptionLabelFormat{parensnum}{(#2)}
 \captionsetup[figure]{labelformat=parensnum,
                       labelsep=space,
@@ -31,6 +34,8 @@
 \begin{document}
 
 \maketitle
+
+\section{Analysis}
 
 In Yoruba, deletion occurs at morpheme boundaries. Specifically, when two
 vowels become adjacent via concatenation of Yoruba morphemes, the first vowel
@@ -86,7 +91,7 @@ Yoruba, when two vowels become adjacent via concatenation of Yoruba morphemes,
 the first vowel is deleted, unless the second vowel is less sonorous,
 in which case it is deleted. This deletion occurs in order to ensure that
 syllables always have an onset. This generalization can be analyzed from an
-optimality-theoretic viewpoint. To begin, the phenomena in
+Optimality-theoretic viewpoint. To begin, the phenomena in
 \pref{fig:deletion-simple} can be naturally accounted for with a prohibition
 against onsetless syllables, so one of the conjoined vowels is deleted to
 prevent such a syllable from surfacing. Specifically, a `V`, with any number of
@@ -150,7 +155,7 @@ instead?
 
 The answer lies in Yoruba's preference for preserving morpheme-initial vowels
 versus morpheme-final vowels. Cross-linguistically, onsets are more important
-than codas-- looking to the corpus of Optimality Theory constraints, for
+than codas--- looking to the corpus of Optimality Theory constraints, for
 instance, we see that \onset{} exists to regulate against syllables
 \textit{without} onsets, but \nocoda{} exists to regulate against syllables
 \textit{with} codas. Given this cross-linguistic asymmetry, it is natural to
@@ -224,12 +229,12 @@ but not the phenomena in \pref{fig:deletion-except-1} or
 \pref{fig:deletion-except-2}. We proceed, now, to analyze the first of these, in
 which [i] is deleted regardless of whether it the morpheme initial or final
 sound. One possible explanation as to why this is the case might be some
-quality of the vowels themselves-- the frontness or backness of the vowels
+quality of the vowels themselves--- the frontness or backness of the vowels
 appears to have no immediately discernible pattern with respect to deletion, so
 we might try vowel height. Indeed, height appears to be correlated: [u] and
 [i], which are both high vowels, are involved in the exceptional deletion
 cases! We analyze both of these instances through the mechanism of sonority,
-which offers an explanation for high vowels being involved in deletion-- they
+which offers an explanation for high vowels being involved in deletion--- they
 are less sonorous. The sonority scale of vowels has been discussed in prior
 work[\textbf{cite the quality-sensitive stress paper}, wikipedia article?].
 This scale is shown in \pref{table:vowel-sonority}.
@@ -373,7 +378,7 @@ come up with a winning candidate that violates either \onset{} or \dep{},
 neither of which is ever seen in the data.
 
 Note that our winner-threatening loser could also have been created via a
-featural change-- we can deal with this in a similar way, by introducing a
+featural change--- we can deal with this in a similar way, by introducing a
 high-ranked \ident{} constraint. We show this below. For similar reasons to
 that for \dep, \ident{} cannot be ranked against \onset. \dep{} and \ident{}
 also cannot be ranked against each other, because we never see a surface
@@ -410,6 +415,8 @@ We now have a complete ranking that accounts for all the data shown in
 \pref{fig:deletion-simple}, \pref{fig:deletion-except-1}, and
 \pref{fig:deletion-except-2}.
 
+\pagebreak
+
 \begin{figure}[h]
 \caption{Yoruba Surface Forms}
 \label{fig:data}
@@ -443,5 +450,116 @@ We now have a complete ranking that accounts for all the data shown in
     \textipa{b\'imO} & have a baby\\
 \end{tabular}
 \end{figure}
+
+\pagebreak
+
+\section{Computing Ideal Surface Forms}
+
+\subsection{Introduction and Background}
+
+We now turn to assigning a computational interpretation to our analysis.
+Creating an algorithm to compute ideal outputs from Optimality-theoretic
+constraints has been explored in prior work, though not extensively. Kartunnen
+\cite{karttunen2006finite} explores a computational implementation of the
+Optimality-theoretic analysis of Finnish stress using the finite state machine
+description language XFST (\cite{karttunen2001applications} gives a broad
+overview of finite state transducers as applied to morphological analysis and
+parsing). Interestingly, such an implementation leads to insights about the
+soundness of the preexisting analyses of Finnish stress--- namely, that they
+are not. Key to this analysis is that it is an \textit{approximation}: indeed,
+the paper itself notes that ``it has been known for a long time [\ldots] that
+\textsc{OT} is not a finite-state system'', and that ``\textsc{OT} is
+fundamentally more complex than [rule-based phonological systems]''.
+
+Idsardi \cite{idsardi2006simple} explores this computational aspect, providing
+a proof that generating an appropriate candidate set which can be evaluated
+against some constraint ranking is \textit{NP-Hard}. This is a term used in
+computability theory to describe a problem to which any number of other hard
+problems can be \textit{reduced}. In essence, if there exists an efficient way
+to solve this problem, a number of other incredibly difficult problems could
+also be easily solved. Knowing a problem is NP-Hard is strong evidence that it
+cannot be solved efficiently.
+
+Heinz, Kobele, and Riggle \cite{heinz2009evaluating} contest this result,
+showing that a different representation of \textsc{OT} grammars as a single
+finite state transducer (instead of a sequence of finite state constriants)
+averts the computational intractability issue demonstrated in
+\cite{idsardi2006simple}. Additionally, they outline two subclasses of the
+\textit{universal problem} of attempting to determine a valid constraint
+ranking and underlying representations given only surface forms. Namely,
+the \textit{simple problem} asks for optimal surface forms given an underlying
+form and fixed constraint set \textsc{Con} and ranking \textsc{R}. The
+\textsc{quasi-universal problem} asks for an optimal surface form given
+a fixed constraint set with any possible ranking.
+
+Encoding our analysis as an algorithm has several advantages, namely, that we
+make explicit the procedure for calculating surface forms from underlying ones,
+forcing us to make obvious any implicit assumptions made in the analysis as we
+step through it. Secondly, and perhaps more interestingly, this enables us to
+test our analysis quickly and thoroughly given new data, ensuring that it holds
+and giving us opportunities to improve it otherwise.
+
+\subsection{Approach}
+
+We base our procedure, crucially, on bounded depth-first search. We first
+describe the basic algorithm, before proceeding onwards to an implementation.
+Viewed as a single function which takes an input and returns an output, our
+analysis takes as input an underlying form and a set of ranked constraints,
+and searches for the correct output form. The search for the correct output
+is of course the crucial portion here, and is the part on which most of the
+discussion will be spent.
+
+Our basic approach employs \textit{bounded depth-first search}. It is best to
+illustrate this technique on a concrete example. Take, for instance, the
+surface form \textipa{[sol\'u]} and its underlying representation
+\textipa{/se-ol\'u/}. We will demonstrate our technique on this mapping.
+
+Our first order of business is to generate a reasonably large set of
+permutations of \textipa{[sol\'u]}, one of which is the correct output form. We
+are not yet attempting to identify which is the correct output form, only
+generate it so it may be picked later. In effect, we are attempting to
+efficiently emulate Optimality Theory's \textsc{Gen}. To do this, we intoduce
+the following core transformations; we model each of these transformations as
+functions of their own:
+
+\begin{enumerate}
+    \item \textbf{Delete}: Delete a segment
+    \item \textbf{Epenthesize}: Insert a segment
+    \item \textbf{Change}: Map a segment to another one
+    \item \textbf{Metathesize}: Swap the positions of two segments
+\end{enumerate}
+
+\textbf{Delete} takes as input a form, such as \textipa{[sol\'u]}, and
+randomly deletes one of the characters. For instance, it may delete
+\textipa{[o]} to produce \textipa{[sl\'u]}, though again, this says little
+about whether such a form would surface. It is more likely to delete inside the
+word than at the edges of the word, following in line with broad phonological
+generalizations about the markedness of deleting morpheme-initial or
+morpheme-final segments (citation about this here?).
+
+\textbf{Epenthesize} inserts a segment into its input and returns the new form.
+For example, if given \textipa{[sol\'u]} as input, epenthesis may return
+\textipa{[sool\'u]}. Again, it is more likely to epenthesize inside the form
+than at its edges.
+
+\textbf{Change}, to some extent, is functionally a composition of the previous
+two operations, replacing one segment with another one. However, this does not
+reflect how such transitions are modeled in the literature, using the
+categorization of segments into their features. To accommodate this without
+undertaking the modeling of autosegmental phonology
+\cite{goldsmith1990autosegmental} in a computationally tractable way, we
+manually partition the set of segments into phonologically similar (not
+necessarily disjoint) sets, and attempt to map largely within these sets.
+Illustrating concretely, we might classify all vowels in the language into one
+set, and all the sonorants into another, so our two sets would look something
+like this:
+
+\subsection{Implementation}
+
+\subsection{Analysis on corpus data}
+
+\section{Concluding}
+
+\printbibliography
 
 \end{document}
