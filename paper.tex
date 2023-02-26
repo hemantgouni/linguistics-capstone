@@ -607,15 +607,31 @@ culprit.
 
 \subsubsection{Evaluating Candidates}
 
-We are now in the appropriate setting to identify the correct output form.
-In order to do this, we must evaluate our entire set of constraints against
-all of the 65536 candidate surface forms we generated previously. This will
-generate a sequence of constraint violations, one for each candidate surface
-form.
+We are now in the appropriate setting to identify the correct output form. In
+order to do this, we must evaluate our entire set of constraints against all of
+the 65536 candidate surface forms we generated previously. This will generate a
+sequence of constraint violations, one for each candidate surface form. We
+search through each sequence in parallel, looking at the number of violations
+for each constraint at the same time, starting from the highest-ranked. We
+determine the minimal number of violations for the current constraint, and
+eliminate all candidates with violation counts that exceed this threshold. We
+repeat until we have a single candidate left, and return this candidate.
+
+TODO: describe the algorithm succinctly using an algorithm figure?
 
 \subsection{Implementation}
 
+TODO: Figure out how best to implement the algorithm described above.
+
+TODO: Show code examples of the critical parts, one for each of the
+subsections above!
+
 \subsection{Analysis on corpus data}
+
+In this section we will evaluate all of our collected Yoruba underlying
+representations against the expected surface forms.
+
+TODO: Requires implementation to be reasonably far along first!
 
 \section{Concluding}
 
