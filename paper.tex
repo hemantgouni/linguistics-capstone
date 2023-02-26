@@ -453,7 +453,7 @@ We now have a complete ranking that accounts for all the data shown in
 
 \pagebreak
 
-\section{Computing Ideal Surface Forms}
+\section{Computing Optimal Surface Forms}
 
 \subsection{Introduction and Background}
 
@@ -514,6 +514,8 @@ illustrate this technique on a concrete example. Take, for instance, the
 surface form \textipa{[sol\'u]} and its underlying representation
 \textipa{/se-ol\'u/}. We will demonstrate our technique on this mapping.
 
+\subsubsection{Core Operations for Generating Candidates}
+
 Our first order of business is to generate a reasonably large set of
 permutations of \textipa{[sol\'u]}, one of which is the correct output form. We
 are not yet attempting to identify which is the correct output form, only
@@ -551,8 +553,65 @@ undertaking the modeling of autosegmental phonology
 manually partition the set of segments into phonologically similar (not
 necessarily disjoint) sets, and attempt to map largely within these sets.
 Illustrating concretely, we might classify all vowels in the language into one
-set, and all the sonorants into another, so our two sets would look something
-like this:
+set, and all sonorants into another:
+
+\begin{enumerate}
+    \item \textipa{a o O i E u}
+    \item \textipa{l m n w j}
+\end{enumerate}
+
+The probability of a segment changing internally to either of these sets is
+high, but the probability of a segment changing across one or the other is much
+lower. We note that it may be necessary to adjust the weighting of these
+probabilities based on the language, or on cross-linguistic data more generally.
+
+\textbf{Metathesize}, finally, can similarly be viewed as a composition of the
+delete and epenthesize, or as a special case of the change operation. It
+differs, of course, in its ability to make targeted transpositions which are
+thought, based on cross-linguistic data, to be atomic (meaning indivisible, or
+inseparable into components) operations of their own. In particular, it's
+significantly more likely to swap two adjacent segments, again deploying
+cross-linguistic observations.
+
+\subsubsection{Generating Candidates}
+
+With these operations in hand, we're now ready to address the interesting
+portion: generating candidates and identifying the ideal one. First up, a short
+description of how candidates are generated. We start with the underlying
+representation. We then use each of \texttt{delete}, \texttt{epenthesize},
+\texttt{change}, and \texttt{metathesize} on the underlying form, 4 times each.
+This produces an initial candidate set of 16 candidates. We repeat the process
+again on each entry, producing 256 entries. We repeat two more times, yielding
+65536 total candidates. We're now ready to evaluate this candidate set against
+our ranked constraints, but before we do so, it is appropriate to discuss how,
+precisely, we represent constraints in a computable way.
+
+\subsubsection{Encoding Constraints}
+
+We represent constraints as functions. Specifically, these functions take as
+input a candidate surface form, compare it against the underlying
+representation, and return a count of violations. The precise logic used to
+compare a candidate surface form against the underlying representation will
+depend on the nature of each constraint. For example, for the constraint
+\textsc{Dep}, the function would compare the underlying form to the candidate
+surface form and determine if the latter has any segments which are not present
+in the former. Of course, it must also determine whether the seemingly
+epenthetic segment is the result of \texttt{change} or \texttt{metathesize},
+and if so, avoid outputting a violation mark for that segment. This could be
+determined by comparing segments around the errant one for equality. If
+corresponding segements are equal at corresponding indices of the underlying
+representation and the candidate surface form, modulo the errant segment, we
+can be reasonably sure that \texttt{change} has taken place, otherwise, if
+they are not, we can be reasonably sure that \texttt{metathesize} is the
+culprit.
+
+\subsubsection{Evaluating Candidates}
+
+We are now in the appropriate setting to identify the correct output form.
+In order to do this, we must evaluate our entire set of constraints against
+all of the 65536 candidate surface forms we generated previously. This will
+generate a sequence of constraint violations, one for each candidate surface
+form.
 
 \subsection{Implementation}
 
