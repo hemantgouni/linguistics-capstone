@@ -6,6 +6,9 @@
 \usepackage{ot-tableau}
 \usepackage[margin=1in]{geometry}
 
+\usepackage{setspace}
+% \doublespacing
+
 \usepackage{biblatex}
 \addbibresource{references.bib}
 
@@ -236,8 +239,8 @@ we might try vowel height. Indeed, height appears to be correlated: [u] and
 cases! We analyze both of these instances through the mechanism of sonority,
 which offers an explanation for high vowels being involved in deletion--- they
 are less sonorous. The sonority scale of vowels has been discussed in prior
-work[\textbf{cite the quality-sensitive stress paper}, wikipedia article?].
-This scale is shown in \pref{table:vowel-sonority}.
+work \cite{kenstowicz1997quality}. This scale is shown in
+\pref{table:vowel-sonority}.
 
 \begin{figure}[h]
     \caption{The vowel sonority scale (ordered by decreasing sonority)}
@@ -489,7 +492,7 @@ averts the computational intractability issue demonstrated in
 ranking and underlying representations given only surface forms. Namely,
 the \textit{simple problem} asks for optimal surface forms given an underlying
 form and fixed constraint set \textsc{Con} and ranking \textsc{R}. The
-\textsc{quasi-universal problem} asks for an optimal surface form given
+\textit{quasi-universal problem} asks for an optimal surface form given
 a fixed constraint set with any possible ranking.
 
 Encoding our analysis as an algorithm has several advantages, namely, that we
