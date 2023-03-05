@@ -13,11 +13,10 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = [
-            pkgs.openssl
-            pkgs.pkgconfig
             pkgs.rustc
             pkgs.cargo
             pkgs.rust-analyzer
+            pkgs.rustfmt
           ];
         };
       }
