@@ -1,22 +1,25 @@
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use unicode_segmentation::UnicodeSegmentation;
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 struct Candidate {
     form: String,
     rng: StdRng,
 }
 
 impl Candidate {
-    fn len(&self) -> usize {
-        self.form.graphemes(true).collect::<Vec<&str>>().len()
+    fn indices(&self) -> Vec<usize> {
+        self.form
+            .grapheme_indices(true)
+            .map(|(index, _)| index)
+            .collect::<Vec<usize>>()
     }
 
-    fn delete(&self) -> Self {
+    fn delete(&mut self) -> Self {
         let mut self_copy = self.clone();
 
-        let index = if self_copy.len() > 0 {
-            self_copy.rng.gen_range(0..self_copy.len())
+        let index = if self_copy.indices().len() > 0 {
+            self_copy.indices()[self.rng.gen_range(0..self_copy.indices().len())]
         } else {
             0
         };
@@ -30,36 +33,33 @@ impl Candidate {
 
         self_copy
     }
-
-    fn epenthesize(&self) -> Self {
-        let mut self_copy = self.clone();
-        let index = self_copy.rng.gen_range(0..self_copy.form.len());
-        self_copy.form.remove(index);
-        self_copy
-    }
 }
 
+trait Constraint {
+    fn evaluate(candidate: Candidate) -> usize;
+}
+
+// impl Constraint {
+
+// }
+
 fn main() {
-    let rng = StdRng::seed_from_u64(7777777);
-    let cand = Candidate {
-        form: "test".to_string(),
-        rng,
+    let mut cand = Candidate {
+        form: "owókíowó".to_string(),
+        rng: StdRng::seed_from_u64(7777777),
     };
-    println!("{:?}", cand.delete().delete().delete());
+    println!("{:#?}", cand.delete().delete().delete().delete());
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use once_cell::sync::Lazy;
-
-    static RNG: Lazy<StdRng> = Lazy::new(|| StdRng::seed_from_u64(7777777));
 
     #[test]
     fn test_delete_1() {
         let cand = Candidate {
             form: "test".to_string(),
-            rng: RNG.clone(),
+            rng: StdRng::seed_from_u64(7777777),
         }
         .delete();
 
@@ -70,8 +70,40 @@ mod test {
     fn test_delete_2() {
         let cand = Candidate {
             form: "test".to_string(),
-            rng: RNG.clone(),
+            rng: StdRng::seed_from_u64(7777777),
         }
+        .delete()
+        .delete()
+        .delete()
+        .delete()
+        .delete();
+
+        assert_eq!(cand.form, "");
+    }
+
+    #[test]
+    fn test_delete_3() {
+        let cand = Candidate {
+            form: "owókíowó".to_string(),
+            rng: StdRng::seed_from_u64(7777777),
+        }
+        .delete()
+        .delete()
+        .delete()
+        .delete();
+
+        assert_eq!(cand.form, "owwó");
+    }
+
+    #[test]
+    fn test_delete_4() {
+        let cand = Candidate {
+            form: "owókíowó".to_string(),
+            rng: StdRng::seed_from_u64(7777777),
+        }
+        .delete()
+        .delete()
+        .delete()
         .delete()
         .delete()
         .delete()
