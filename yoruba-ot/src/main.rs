@@ -1,4 +1,5 @@
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use similar::{DiffOp, TextDiff};
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Clone)]
@@ -36,19 +37,52 @@ impl Candidate {
 }
 
 trait Constraint {
-    fn evaluate(candidate: Candidate) -> usize;
+    fn evaluate(self, surface: Candidate) -> usize;
 }
 
-// impl Constraint {
+struct Ident(Candidate);
 
-// }
+impl Constraint for Ident {
+    fn evaluate(self, surface: Candidate) -> usize {
+        let diff = TextDiff::from_graphemes(&self.0.form, &surface.form);
+
+        diff.ops()
+            .iter()
+            .filter(|op| match op {
+                DiffOp::Replace { .. } => true,
+                _ => false,
+            })
+            .count()
+    }
+}
+
+struct Dep(Candidate);
+
+impl Constraint for Dep {
+    fn evaluate(self, surface: Candidate) -> usize {
+        let diff = TextDiff::from_graphemes(&self.0.form, &surface.form);
+
+        diff.ops()
+            .iter()
+            .filter(|op| match op {
+                DiffOp::Insert { .. } => true,
+                _ => false,
+            })
+            .count()
+    }
+}
 
 fn main() {
-    let mut cand = Candidate {
+    let cand1 = Candidate {
         form: "owókíowó".to_string(),
         rng: StdRng::seed_from_u64(7777777),
     };
-    println!("{:#?}", cand.delete().delete().delete().delete());
+    let cand2 = Candidate {
+        form: "ówakíówó".to_string(),
+        rng: StdRng::seed_from_u64(7777777),
+    };
+    let ident = Ident(cand1);
+    println!("{:#?}", ident.evaluate(dbg!(cand2)));
 }
 
 #[cfg(test)]
@@ -111,5 +145,22 @@ mod test {
         .delete();
 
         assert_eq!(cand.form, "");
+    }
+
+    #[test]
+    fn test_ident_1() {
+        let cand1 = Candidate {
+            form: "owókíowó".to_string(),
+            rng: StdRng::seed_from_u64(7777777),
+        };
+
+        let cand2 = Candidate {
+            form: "ówakíówó".to_string(),
+            rng: StdRng::seed_from_u64(7777777),
+        };
+
+        let ident = Ident(cand1);
+
+        assert_eq!(ident.evaluate(cand2), 3);
     }
 }
