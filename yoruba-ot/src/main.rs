@@ -1,6 +1,34 @@
+#![allow(dead_code)]
+
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use similar::{DiffOp, TextDiff};
 use unicode_segmentation::UnicodeSegmentation;
+
+// string -> syllabified candidate -> random deletions (all winners generated via deletions) ->
+// eval against constraints
+
+const VOWELS: [&'static str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
+
+#[derive(Debug, Clone)]
+struct SyllabifiedCandidate {
+    form: Vec<Segment>,
+    rng: StdRng,
+}
+
+#[derive(Debug, Clone)]
+struct Segment {
+    char: String,
+    char_type: SegmentType,
+}
+
+#[derive(Debug, Clone)]
+enum SegmentType {
+    Onset,
+    Vowel,
+    Coda,
+}
+
+// fn syllabify()
 
 #[derive(Debug, Clone)]
 struct Candidate {
@@ -16,6 +44,7 @@ impl Candidate {
             .collect::<Vec<usize>>()
     }
 
+    // &mut because we want to change the rng when we delete
     fn delete(&mut self) -> Self {
         let mut self_copy = self.clone();
 
@@ -71,6 +100,15 @@ impl Constraint for Dep {
             .count()
     }
 }
+
+struct Onset(Candidate);
+
+// impl Constraint for Onset {
+//     fn evaluate(self, surface: Candidate) -> usize {
+//         let diff = TextDiff::from_graphemes(&self.0.form, &surface.form);
+
+//     }
+// }
 
 fn main() {
     let cand1 = Candidate {
