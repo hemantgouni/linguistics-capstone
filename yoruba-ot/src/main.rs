@@ -199,9 +199,9 @@ impl Constraint for Onset {
     }
 }
 
-struct SonoritySequencingPrinciple;
+struct SonSeqPr;
 
-impl Constraint for SonoritySequencingPrinciple {
+impl Constraint for SonSeqPr {
     fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
         surface
             .form
@@ -222,7 +222,7 @@ impl Constraint for SonoritySequencingPrinciple {
 
 fn main() {
     let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
-    dbg!(SonoritySequencingPrinciple.evaluate(syllabified_candidate));
+    dbg!(SonSeqPr.evaluate(syllabified_candidate));
 }
 
 #[cfg(test)]
@@ -288,7 +288,7 @@ mod test {
     fn test_ssp_1() {
         let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
         assert_eq!(
-            SonoritySequencingPrinciple.evaluate(syllabified_candidate),
+            SonSeqPr.evaluate(syllabified_candidate),
             7
         );
     }
@@ -297,7 +297,7 @@ mod test {
     fn test_ssp_2() {
         let syllabified_candidate: SyllabifiedCandidate = "".into();
         assert_eq!(
-            SonoritySequencingPrinciple.evaluate(syllabified_candidate),
+            SonSeqPr.evaluate(syllabified_candidate),
             0
         );
     }
