@@ -11,7 +11,7 @@ use utils::PushRet;
 // string -> syllabified candidate -> random deletions (all winners generated via deletions) ->
 // eval against constraints
 
-const VOWELS: [&'static str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
+const VOWELS: [&str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
 
 #[derive(Debug, Clone)]
 struct SyllabifiedCandidate {
@@ -35,7 +35,7 @@ enum SegmentType {
 
 impl SyllabifiedCandidate {
     fn delete(mut self) -> Self {
-        if self.form.len() > 0 {
+        if !self.form.is_empty() {
             self.form.remove(self.rng.gen_range(0..self.form.len()));
         }
         self
@@ -125,41 +125,6 @@ fn syllabify(candidate: Vec<Segment>) -> Vec<Segment> {
     mark_codas(mark_onsets(mark_vowels(candidate)))
 }
 
-// #[derive(Debug, Clone)]
-// struct Candidate {
-//     form: String,
-//     rng: StdRng,
-// }
-
-// impl Candidate {
-//     fn indices(&self) -> Vec<usize> {
-//         self.form
-//             .grapheme_indices(true)
-//             .map(|(index, _)| index)
-//             .collect::<Vec<usize>>()
-//     }
-
-//     // &mut because we want to change the rng when we delete
-//     fn delete(&mut self) -> Self {
-//         let mut self_copy = self.clone();
-
-//         let index = if self_copy.indices().len() > 0 {
-//             self_copy.indices()[self.rng.gen_range(0..self_copy.indices().len())]
-//         } else {
-//             0
-//         };
-
-//         self_copy.form = self_copy
-//             .form
-//             .grapheme_indices(true)
-//             .filter(|(char_index, _)| *char_index != index)
-//             .map(|(_, str)| str)
-//             .collect::<String>();
-
-//         self_copy
-//     }
-// }
-
 trait Constraint {
     fn evaluate(self, surface: SyllabifiedCandidate) -> usize;
 }
@@ -175,10 +140,7 @@ impl Constraint for Ident {
 
         diff.ops()
             .iter()
-            .filter(|op| match op {
-                DiffOp::Replace { .. } => true,
-                _ => false,
-            })
+            .filter(|op| matches!(op, DiffOp::Replace { .. }))
             .count()
     }
 }
@@ -194,10 +156,7 @@ impl Constraint for Dep {
 
         diff.ops()
             .iter()
-            .filter(|op| match op {
-                DiffOp::Insert { .. } => true,
-                _ => false,
-            })
+            .filter(|op| matches!(op, DiffOp::Insert { .. }))
             .count()
     }
 }

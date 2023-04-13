@@ -15,6 +15,7 @@
           buildInputs = [
             pkgs.rustc
             pkgs.cargo
+            pkgs.clippy
             pkgs.rust-analyzer
             pkgs.rustfmt
           ];
