@@ -22,15 +22,22 @@ struct SyllabifiedCandidate {
 #[derive(Debug, Clone)]
 struct Segment {
     char: String,
-    char_type: SegmentType,
+    syllable_index: SyllableIndex,
+    seg_type: SegmentType,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-enum SegmentType {
+enum SyllableIndex {
     Onset,
     Nucleus,
     Coda,
     None,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+enum SegmentType {
+    Vowel,
+    Consonant,
 }
 
 impl SyllabifiedCandidate {
@@ -42,6 +49,14 @@ impl SyllabifiedCandidate {
     }
 }
 
+fn get_seg_type(grapheme: &str) -> SegmentType {
+    if VOWELS.contains(&grapheme) {
+        SegmentType::Vowel
+    } else {
+        SegmentType::Consonant
+    }
+}
+
 impl From<&str> for SyllabifiedCandidate {
     fn from(str: &str) -> SyllabifiedCandidate {
         SyllabifiedCandidate {
@@ -49,7 +64,8 @@ impl From<&str> for SyllabifiedCandidate {
                 str.graphemes(true)
                     .map(|grapheme| Segment {
                         char: grapheme.to_owned(),
-                        char_type: SegmentType::None,
+                        syllable_index: SyllableIndex::None,
+                        seg_type: get_seg_type(grapheme),
                     })
                     .collect(),
             ),
@@ -65,10 +81,11 @@ impl From<SyllabifiedCandidate> for String {
 }
 
 impl Segment {
-    fn morph_type(&self, seg_type: SegmentType) -> Segment {
+    fn morph_type(&self, seg_type: SyllableIndex) -> Segment {
         Segment {
             char: self.char.clone(),
-            char_type: seg_type,
+            syllable_index: seg_type,
+            seg_type: self.seg_type.clone(),
         }
     }
 }
@@ -83,7 +100,7 @@ fn mark_vowels(candidate: Vec<Segment>) -> Vec<Segment> {
         .iter()
         .map(|segment| {
             if VOWELS.contains(&segment.char.as_str()) {
-                segment.morph_type(SegmentType::Nucleus)
+                segment.morph_type(SyllableIndex::Nucleus)
             } else {
                 segment.clone()
             }
@@ -92,15 +109,16 @@ fn mark_vowels(candidate: Vec<Segment>) -> Vec<Segment> {
 }
 
 fn mark_onsets(candidate: Vec<Segment>) -> Vec<Segment> {
-    let mut annotated: (SegmentType, Vec<Segment>) = candidate.iter().rev().fold(
-        (SegmentType::None, Vec::new()),
-        |(prev_seg_type, mut segs), seg| match (prev_seg_type, seg.to_owned().char_type) {
-            (SegmentType::Nucleus, SegmentType::None) => (
-                SegmentType::Onset,
-                segs.push_ret(seg.morph_type(SegmentType::Onset)).to_owned(),
+    let mut annotated: (SyllableIndex, Vec<Segment>) = candidate.iter().rev().fold(
+        (SyllableIndex::None, Vec::new()),
+        |(prev_seg_type, mut segs), seg| match (prev_seg_type, seg.to_owned().syllable_index) {
+            (SyllableIndex::Nucleus, SyllableIndex::None) => (
+                SyllableIndex::Onset,
+                segs.push_ret(seg.morph_type(SyllableIndex::Onset))
+                    .to_owned(),
             ),
             _ => (
-                seg.char_type.to_owned(),
+                seg.syllable_index.to_owned(),
                 segs.push_ret(seg.to_owned()).to_owned(),
             ),
         },
@@ -114,8 +132,8 @@ fn mark_onsets(candidate: Vec<Segment>) -> Vec<Segment> {
 fn mark_codas(candidate: Vec<Segment>) -> Vec<Segment> {
     candidate
         .iter()
-        .map(|seg| match seg.char_type {
-            SegmentType::None => seg.morph_type(SegmentType::Coda),
+        .map(|seg| match seg.syllable_index {
+            SyllableIndex::None => seg.morph_type(SyllableIndex::Coda),
             _ => seg.to_owned(),
         })
         .collect()
@@ -168,22 +186,43 @@ impl Constraint for Onset {
         let syllabi = surface
             .form
             .iter()
-            .filter(|seg| seg.char_type == SegmentType::Nucleus)
+            .filter(|seg| seg.syllable_index == SyllableIndex::Nucleus)
             .count();
 
         let onsets = surface
             .form
             .iter()
-            .filter(|seg| seg.char_type == SegmentType::Onset)
+            .filter(|seg| seg.syllable_index == SyllableIndex::Onset)
             .count();
 
         onsets - syllabi
     }
 }
 
+struct SonoritySequencingPrinciple;
+
+impl Constraint for SonoritySequencingPrinciple {
+    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
+        surface
+            .form
+            .iter()
+            // a hack to ignore accent marks
+            //
+            // .next().unwrap() should never panic here bc that's only possible if the initial
+            // candidate input string is empty, and if that's true, then the iterator will be empty
+            .map(|seg| match seg.char.chars().next().unwrap() {
+                'e' | 'ɛ' | 'o' | 'ɔ' => 1,
+                'u' => 2,
+                'i' => 3,
+                _ => 0,
+            })
+            .sum()
+    }
+}
+
 fn main() {
-    let syllabified_candidate: SyllabifiedCandidate = "vowels".into();
-    dbg!(syllabified_candidate);
+    let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
+    dbg!(SonoritySequencingPrinciple.evaluate(syllabified_candidate));
 }
 
 #[cfg(test)]
@@ -243,5 +282,23 @@ mod test {
         let ident = Ident(cand1);
 
         assert_eq!(ident.evaluate(cand2), 3);
+    }
+
+    #[test]
+    fn test_ssp_1() {
+        let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
+        assert_eq!(
+            SonoritySequencingPrinciple.evaluate(syllabified_candidate),
+            7
+        );
+    }
+
+    #[test]
+    fn test_ssp_2() {
+        let syllabified_candidate: SyllabifiedCandidate = "".into();
+        assert_eq!(
+            SonoritySequencingPrinciple.evaluate(syllabified_candidate),
+            0
+        );
     }
 }
