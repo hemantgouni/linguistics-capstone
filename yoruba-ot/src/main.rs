@@ -69,11 +69,14 @@ impl From<&str> for SyllabifiedCandidate {
             .collect();
 
         // grouping affricates together as non-separate segments
-        for idx in 0..(graphemes.len() - 1) {
-            if graphemes[idx].char == "d\u{361}" && graphemes[idx + 1].char == "ʒ" {
-                let char_to_concat = graphemes[idx + 1].char.clone();
-                graphemes[idx].char.push_str(&char_to_concat);
-                graphemes.remove(idx + 1);
+        // can we do this more cleanly?
+        if !graphemes.is_empty() {
+            for idx in 0..graphemes.len() - 1 {
+                if graphemes[idx].char == "d\u{361}" && graphemes[idx + 1].char == "ʒ" {
+                    let char_to_concat = graphemes[idx + 1].char.clone();
+                    graphemes[idx].char.push_str(&char_to_concat);
+                    graphemes.remove(idx + 1);
+                }
             }
         }
 
