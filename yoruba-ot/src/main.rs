@@ -59,16 +59,26 @@ fn get_seg_type(grapheme: &str) -> SegmentType {
 
 impl From<&str> for SyllabifiedCandidate {
     fn from(str: &str) -> SyllabifiedCandidate {
+        let mut graphemes: Vec<Segment> = str
+            .graphemes(true)
+            .map(|grapheme| Segment {
+                char: grapheme.to_owned(),
+                syllable_index: SyllableIndex::None,
+                seg_type: get_seg_type(grapheme),
+            })
+            .collect();
+
+        // grouping affricates together as non-separate segments
+        for idx in 0..(graphemes.len() - 1) {
+            if graphemes[idx].char == "d\u{361}" && graphemes[idx + 1].char == "ʒ" {
+                let char_to_concat = graphemes[idx + 1].char.clone();
+                graphemes[idx].char.push_str(&char_to_concat);
+                graphemes.remove(idx + 1);
+            }
+        }
+
         SyllabifiedCandidate {
-            form: syllabify(
-                str.graphemes(true)
-                    .map(|grapheme| Segment {
-                        char: grapheme.to_owned(),
-                        syllable_index: SyllableIndex::None,
-                        seg_type: get_seg_type(grapheme),
-                    })
-                    .collect(),
-            ),
+            form: syllabify(graphemes),
             rng: StdRng::seed_from_u64(7777777),
         }
     }
@@ -210,7 +220,7 @@ impl Constraint for SonSeqPr {
             //
             // .next().unwrap() should never panic here bc that's only possible if the initial
             // candidate input string is empty, and if that's true, then the iterator will be empty
-            .map(|seg| match seg.char.chars().next().unwrap() {
+            .map(|seg| match dbg!(seg.char.chars().next().unwrap()) {
                 'e' | 'ɛ' | 'o' | 'ɔ' => 1,
                 'u' => 2,
                 'i' => 3,
@@ -221,7 +231,7 @@ impl Constraint for SonSeqPr {
 }
 
 fn main() {
-    let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
+    let syllabified_candidate: SyllabifiedCandidate = dbg!("d͡ʒuigi".into());
     dbg!(SonSeqPr.evaluate(syllabified_candidate));
 }
 
@@ -287,18 +297,12 @@ mod test {
     #[test]
     fn test_ssp_1() {
         let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
-        assert_eq!(
-            SonSeqPr.evaluate(syllabified_candidate),
-            7
-        );
+        assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 7);
     }
 
     #[test]
     fn test_ssp_2() {
         let syllabified_candidate: SyllabifiedCandidate = "".into();
-        assert_eq!(
-            SonSeqPr.evaluate(syllabified_candidate),
-            0
-        );
+        assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 0);
     }
 }
