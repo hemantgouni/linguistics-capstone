@@ -6,6 +6,7 @@
 \usepackage{ot-tableau}
 \usepackage[margin=1in]{geometry}
 \usepackage{minted}
+\usepackage{hyperref}
 
 \usepackage{setspace}
 \onehalfspacing
@@ -648,9 +649,78 @@ determine the minimal number of violations for the current constraint, and
 eliminate all candidates with violation counts that exceed this threshold. We
 repeat until we have a single candidate left, and return this candidate.
 
-TODO: describe the algorithm succinctly using an algorithm figure?
-
 \subsection{Implementation}
+
+\begin{figure}[h]
+\caption{Our representation of words in Yoruba, along with our strategy for deletion.}
+\label{fig:impl-deletion}
+\begin{minted}{rust}
+#[derive(Debug, Clone)]
+struct SyllabifiedCandidate {
+    form: Vec<Segment>,
+    rng: StdRng,
+}
+
+impl SyllabifiedCandidate {
+    fn delete(mut self) -> Self {
+        if !self.form.is_empty() {
+            self.form.remove(self.rng.gen_range(0..self.form.len()));
+        }
+        self
+    }
+}
+\end{minted}
+\end{figure}
+
+We now describe key details of our implementation. The full source code may be
+found at \href{https://github.com/hemantgouni/linguistics-capstone}{github.com/hemantgouni/linguistics-capstone}.
+Starting with the basics, Figure \ref{fig:impl-deletion} shows both our
+representation of Yoruba words, and our simple handling of deletion.
+Specifically, a word is represented as a list of segments (this is the meaning of
+\texttt{Vec<Segment>}). At this point, you might ask: why not represent words simply
+as a list of characters? What's the difference between a character and a segment?
+This reflects a complication in computers' handling of text beyond simple English
+characters, covered by the ASCII character encoding. Unicode, an improvement of
+ASCII that handles many more languages beyond those which use the Latin alphabet,
+would consider the accent mark and letter \textipa{O} in \textipa{\'O}, to be
+separate characters, and not part of the same. We must sidestep this issue by
+parsing words into \textit{graphemes}, which accounts for the intuitive notion
+of what a character is.
+
+With that technical hiccup out of the way, our implementation of deletion is much
+simpler. It is interesting to note that within the context of our analysis,
+deletion turns out to be the most important of the operations to implement, because
+winning candidates are always generated via deletion (due to high-ranking \dep{}
+and \ident{} constraints). We implement deletion by picking a random element of
+the list of segments and removing it. Because we cluster characters by Unicode
+graphemes, the probability of any single character being deleted is evenly
+distributed between all in a given word.
+
+\begin{figure}[h]
+\caption{Our implementation of \onset}
+\label{fig:impl-onset}
+\begin{minted}{rust}
+impl Constraint for Onset {
+    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
+        let syllabi = surface
+            .form
+            .iter()
+            .filter(|seg| seg.syllable_index == SyllableIndex::Nucleus)
+            .count();
+
+        let onsets = surface
+            .form
+            .iter()
+            .filter(|seg| seg.syllable_index == SyllableIndex::Onset)
+            .count();
+
+        onsets - syllabi
+    }
+}
+\end{minted}
+\end{figure}
+
+We now 
 
 TODO: Figure out how best to implement the algorithm described above.
 
