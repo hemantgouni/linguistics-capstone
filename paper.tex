@@ -5,9 +5,10 @@
 \usepackage{tipa}
 \usepackage{ot-tableau}
 \usepackage[margin=1in]{geometry}
+\usepackage{minted}
 
 \usepackage{setspace}
-% \doublespacing
+\onehalfspacing
 
 \usepackage{biblatex}
 \addbibresource{references.bib}
@@ -31,13 +32,33 @@
 
 \newcommand{\pref}[1]{(\ref{#1})}
 
-\title{Vowel Elision in Yoruba Collocations}
+\title{Computing Vowel Elision in Yoruba Collocations}
 \author{Hemant Gouni}
 \date{May 15th, 2023}
 
 \begin{document}
 
 \maketitle
+
+\section{Introduction}
+
+The phenomenon of vowel hiatus in Yoruba, a language in the Niger-Congo family
+spoken primarily in West Africa, is well-documented. A large body of work
+exists that explores the various aspects of it, largely from an
+optimality-theoretic perspective \cite{ola2002yoruba, seidl2000yoruba}. Two
+particularly well-studied instances of this problem are \textit{assimilation}
+and \textit{deletion}. These are the two primary strategies employed by the
+language for resolving a sequence of two or more vowels that occur at the
+boundary of two adjoined morphemes. This text will specifically explore the
+second strategy of deletion, and in doing so, will attempt to provide an
+analysis that is simple enough to be feasible to verify computationally. That
+is, once we have developed our analysis, the core contribution of this work
+will be to encode it computationally so it can be quickly and easily verified
+whether it works for a range of corpus data. We employ an optimality-theoretic
+perspective throughout, and provide a thorough discussion in Section
+\ref{sec:computing-optimal-surface-forms} of the prior work on computational
+interpretations of optimality theory. Afterwards, we describe our own approach
+to automating our analysis and discuss its efficacy.
 
 \section{Analysis}
 
@@ -53,11 +74,15 @@ surface forms, as shown below in \pref{fig:deletion-simple},
 \begin{tabular}{c|c|c|c}
     \textbf{Underlying} & \textbf{Surface} & \textbf{Underlying} & \textbf{Surface}\\
     \textipa{/ow\'o-k\'i-ow\'o/} & \textipa{[ow\'ok\'ow\'o]} & \textipa{/\textdyoghlig{}\'o-\`Ew\`u/} & \textipa{[\textdyoghlig{}\'Ew\`u]}\\
-    \textipa{/OmO-k\'i-OmO/} & \textipa{[OmOk\'OmO]} & \textipa{/ra-\`Og\`Ed\`E/} & \textipa{[r\`Og\`Ed\`E]}\\
+    \textipa{/OmO-k\'i-OmO/} & \textipa{[OmOk\'OmO]} & \textipa{/ra-\`Og\`Ed\`E/} & \textipa{[r\`Og\`Ed\`E]}\footnotemark\\
     \textipa{/se-ol\'u/} & \textipa{[sol\'u]} & \textipa{/n\'i-oko/} & \textipa{[l\'oko]}\\
     \textipa{/\textdyoghlig{}E-ed\'e/} & \textipa{[\textdyoghlig{}ed\'e]} & \textipa{/s\'i-O\textdyoghlig{}\`a/} & \textipa{[s\'O\textdyoghlig{}\`a]}\\
 \end{tabular}
 \end{figure}
+
+\footnotetext{As you will see, this example contradicts our analysis. However,
+it appears as a valid form only in a single source, so we note this and
+continue as though it is an exception.}
 
 % for handling [bimo], markedness constraint for preferring vowels to be
 % approximately in the same place when both surrounding consonants share place?
@@ -457,6 +482,7 @@ We now have a complete ranking that accounts for all the data shown in
 
 \pagebreak
 
+\label{sec:computing-optimal-surface-forms}
 \section{Computing Optimal Surface Forms}
 
 \subsection{Introduction and Background}
