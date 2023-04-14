@@ -696,10 +696,10 @@ the list of segments and removing it. Because we cluster characters by Unicode
 graphemes, the probability of any single character being deleted is evenly
 distributed between all in a given word.
 
-\begin{figure}[h]
+\begin{figure}[h!]
 \caption{Our implementation of \onset}
 \label{fig:impl-onset}
-\begin{minted}{rust}
+\begin{minted}[linenos]{rust}
 impl Constraint for Onset {
     fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
         let syllabi = surface
@@ -720,12 +720,71 @@ impl Constraint for Onset {
 \end{minted}
 \end{figure}
 
-We now 
+The other significant portion of our implementation, beyond generating
+candidates, is evaluating them. This, of course, is done with constraints.
+Figure \ref{fig:impl-onset} shows our implementation of the \onset{}
+markedness constraint. On lines 2-7, we count the number of syllable
+nuclei in the input (a \texttt{SyllabifiedCandidate} from Figure
+\ref{fig:impl-deletion}). On lines 9-13, we count the number of onsets.
+Onsets and nuclei are calculated, along with other linguistic data, upon
+the creation of a \texttt{SyllabifiedCandidate}; we merely analyze them
+here. The number of violations of \onset{} is given by the number of
+onsets minus the number of nuclei. This will never be a negative number,
+because the algorithm that marks onsets and nuclei will only create one
+onset per nucleus, at most (because this is the maximum allowed by
+Yoruba).
 
-TODO: Figure out how best to implement the algorithm described above.
+\begin{figure}[h]
+\caption{The implementation of \dep}
+\label{fig:impl-dep}
+\begin{minted}[linenos]{rust}
+struct Dep(SyllabifiedCandidate);
 
-TODO: Show code examples of the critical parts, one for each of the
-subsections above!
+impl Constraint for Dep {
+    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
+        let self_str: String = self.0.into();
+        let surface_str: String = surface.into();
+
+        let diff = TextDiff::from_graphemes::<String>(&self_str, &surface_str);
+
+        diff.ops()
+            .iter()
+            .filter(|op| matches!(op, DiffOp::Insert { .. }))
+            .count()
+    }
+}
+\end{minted}
+\end{figure}
+
+Of course, no discussion of constraints would be complete without
+\textit{faithfulness} constraints. These present an interesting challenge,
+but we first provide an overview of the implementation, which is provided
+in Figure \ref{fig:impl-dep}. On lines 5 and 6, we respectively turn the
+original underlying form and the candidate surface form into their string
+respresentations. We then use a diff algorithm on these strings on line 8,
+which returns a sequence of operations which could be performed on the
+original underlying form to morph it into the candidate surface form given
+as input. On lines 10-13, we count the number of insertion operations
+returned by the diff algorithm.
+
+A difficult and subtle complication arises here: how does the diff
+algorithm \textit{know} what counts as an insertion, deletion, or change?
+For instance, changing \textipa{/ow\'o-k\'i-ow\'o/} into
+\textipa{[ow\'ok\'ow\'o]} is a relatively straightforward case of
+deletion. But what about \textipa{[ow\'ak\'iow\'o]}? In this case, the
+diff algorithm could decide that \textipa{[\'o]} was deleted and
+\textipa{[\'a]} inserted. Or it could instead say that \textipa{[\'o]}
+changed into \textipa{[\'a]}. Which of these occurs is linguistically
+relevant. This has not yet caused problems on real corpus data, but
+when it does, a potential solution is fine-tuning the diff algorithm
+to choose the more linguistically sound operations as outputs, making
+it aware of autosegmental phonology when it, for example, is choosing
+between a replacement operation or a insertion + deletion operations.
+
+To this point, our descriptions have been fairly abstract, so it is best
+to illustrate with an example. Given \textipa{/ow\'o-k\'i-ow\'o/} as
+input, how would we generate a random candidate output form from it?
+And how would we evaluate it against \onset{} and \dep?
 
 \subsection{Analysis on corpus data}
 
