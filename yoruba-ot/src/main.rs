@@ -11,6 +11,9 @@ use utils::PushRet;
 // string -> syllabified candidate -> random deletions (all winners generated via deletions) ->
 // eval against constraints
 
+// TODO: make coda filling in more accurate to Yoruba, and make a constraint against unindexed
+// segments
+
 const VOWELS: [&str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
 
 #[derive(Debug, Clone)]
@@ -45,7 +48,11 @@ impl SyllabifiedCandidate {
         if !self.form.is_empty() {
             self.form.remove(self.rng.gen_range(0..self.form.len()));
         }
-        self
+
+        SyllabifiedCandidate {
+            form: syllabify(self.form),
+            rng: self.rng,
+        }
     }
 }
 
@@ -208,7 +215,7 @@ impl Constraint for Onset {
             .filter(|seg| seg.syllable_index == SyllableIndex::Onset)
             .count();
 
-        onsets - syllabi
+        syllabi - onsets
     }
 }
 
@@ -234,8 +241,8 @@ impl Constraint for SonSeqPr {
 }
 
 fn main() {
-    let syllabified_candidate: SyllabifiedCandidate = dbg!("d͡ʒuigi".into());
-    dbg!(SonSeqPr.evaluate(syllabified_candidate));
+    let syllabified_candidate: SyllabifiedCandidate = dbg!("owokiowo".into());
+    dbg!(Onset.evaluate(syllabified_candidate));
 }
 
 #[cfg(test)]
