@@ -11,8 +11,9 @@ use utils::PushRet;
 // string -> syllabified candidate -> random deletions (all winners generated via deletions) ->
 // eval against constraints
 
-// TODO: make coda filling in more accurate to Yoruba, and make a constraint against unindexed
-// segments
+// TODO: make coda filling in more accurate to Yoruba (don't just replace all None with Coda, only
+// insert each coda at an available spot after each nucleus), and make a constraint against
+// unindexed segments
 
 const VOWELS: [&str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
 
@@ -50,7 +51,22 @@ impl SyllabifiedCandidate {
         }
 
         SyllabifiedCandidate {
-            form: syllabify(self.form),
+            form: syllabify(self.clone().clear_indices().form),
+            rng: self.rng,
+        }
+    }
+
+    fn clear_indices(self) -> Self {
+        SyllabifiedCandidate {
+            form: self
+                .form
+                .iter()
+                .map(|seg| Segment {
+                    char: seg.char.clone(),
+                    syllable_index: SyllableIndex::None,
+                    seg_type: seg.seg_type.clone(),
+                })
+                .collect(),
             rng: self.rng,
         }
     }
@@ -241,8 +257,8 @@ impl Constraint for SonSeqPr {
 }
 
 fn main() {
-    let syllabified_candidate: SyllabifiedCandidate = dbg!("owokiowo".into());
-    dbg!(Onset.evaluate(syllabified_candidate));
+    let syllabified_candidate: SyllabifiedCandidate = dbg!("owoiowo".into());
+    dbg!(Onset.evaluate(dbg!(syllabified_candidate)));
 }
 
 #[cfg(test)]
