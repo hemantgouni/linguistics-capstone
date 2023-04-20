@@ -44,22 +44,24 @@
 \section{Introduction}
 
 The phenomenon of vowel hiatus in Yoruba, a language in the Niger-Congo family
-spoken primarily in West Africa, is well-documented. A large body of work
+spoken primarily in West Africa, is well-documented. A mature body of work
 exists that explores the various aspects of it, largely from an
-optimality-theoretic perspective \cite{ola2002yoruba, seidl2000yoruba}. Two
-particularly well-studied instances of this problem are \textit{assimilation}
-and \textit{deletion}. These are the two primary strategies employed by the
-language for resolving a sequence of two or more vowels that occur at the
-boundary of two adjoined morphemes. This text will specifically explore the
-second strategy of deletion, and in doing so, will attempt to provide an
-analysis that is simple enough to be feasible to verify computationally. That
+optimality-theoretic perspective \cite{ola2002yoruba, seidl2000yoruba,
+pulleyblank1988vowel}. Two particularly well-studied instances of this problem
+are the \textit{assimilation} case and the \textit{deletion} case. These are the
+two primary strategies employed by the language for resolving sequences of two
+or more vowels that occur at the boundary of two adjoined morphemes
+(sequences of two vowels do not generally appear in Yoruba words due to
+syllable structure constraints). This text will specifically explore the
+second strategy of deletion, and in doing so, will specially attempt to provide
+an analysis that is simple enough to be feasible to verify computationally. That
 is, once we have developed our analysis, the core contribution of this work
-will be to encode it computationally so it can be quickly and easily verified
-whether it works for a range of corpus data. We employ an optimality-theoretic
-perspective throughout, and provide a thorough discussion in Section
-\ref{sec:computing-optimal-surface-forms} of the prior work on computational
-interpretations of optimality theory. Afterwards, we describe our own approach
-to automating our analysis and discuss its efficacy.
+will be to encode it as a computer program so it can be quickly and easily
+verified whether it works for a range of corpus data. We employ an
+optimality-theoretic perspective throughout, and provide a thorough discussion
+in Section \ref{sec:computing-optimal-surface-forms} of the prior work on
+computational interpretations of optimality theory. Afterwards, we describe
+our own approach to automating our analysis and discuss its efficacy.
 
 \section{Analysis}
 
@@ -119,8 +121,9 @@ unless followed by /i/ in which case /i/ is deleted, as seen in
 We can describe these three distinct groups of data straightforwardly. In
 Yoruba, when two vowels become adjacent via concatenation of Yoruba morphemes,
 the first vowel is deleted, unless the second vowel is less sonorous,
-in which case it is deleted. This deletion occurs in order to ensure that
-syllables always have an onset. This generalization can be analyzed from an
+in which case it is deleted (the Yoruba vowel inventory and sonority scale is
+discussed on page 4). This deletion occurs in order to ensure that syllables
+always have an onset. This generalization can be analyzed from an
 Optimality-theoretic viewpoint. To begin, the phenomena in
 \pref{fig:deletion-simple} can be naturally accounted for with a prohibition
 against onsetless syllables, so one of the conjoined vowels is deleted to
@@ -129,10 +132,6 @@ prevent such a syllable from surfacing. Specifically, a `V`, with any number of
 onset. We can codify this observation via the constraint \onset, which
 precisely moderates against candidate surface forms with syllables which lack
 an onset. This is defined in \pref{def:onset-and-maxc}.
-
-% \textbf{make sure we're formulating the foot binarity effect correctly}
-
-% \textbf{cite Yoruba Vowel Elisision: Minimality Effects}
 
 \begin{figure}[h]
     \caption{Definitions for \onset{} and \maxc.}
@@ -282,7 +281,8 @@ This helps inform why, for the data in \pref{fig:deletion-except-1}, [i] is
 always elided, even though it appears morpheme-initially underlyingly.
 Specifically, the language prefers to delete less sonorous vowels such as
 [i] over more sonorous vowels. We can codify this intuition into a faithfulness
-constraint, \ssp. This constraint is defined in \pref{def:ssp}.
+constraint, \ssp{} (which stands for `Sonority Sequencing Principle').
+This constraint is defined in \pref{def:ssp}.
 
 % use smth like PEAK-PROMINENCE here instead?
 \begin{figure}[h]
@@ -385,7 +385,7 @@ We now show a summary tableau for the input \textipa{/\textdyoghlig{}u-igi/}.
     \end{tableau}
 \end{figure}
 
-We notice that candidate three is a winner threatening loser! It deletes both
+We notice that candidate four is a winner threatening loser! It deletes both
 of the non-sonorous vowels at the boundary of the two morphemes, and instead
 epenthesizes an [a], which is a very sonorous vowel, incurring no violations of
 \ssp. In order to prevent this winner-threatening loser, we introduce a
@@ -483,8 +483,8 @@ We now have a complete ranking that accounts for all the data shown in
 
 \pagebreak
 
-\label{sec:computing-optimal-surface-forms}
 \section{Computing Optimal Surface Forms}
+\label{sec:computing-optimal-surface-forms}
 
 \subsection{Introduction and Background}
 
@@ -549,8 +549,8 @@ demonstrate our technique on this mapping.
 \subsubsection{Core Operations for Generating Candidates}
 
 Our first order of business is to generate a reasonably large set of
-permutations of \textipa{[sol\'u]}, one of which is the correct output form. We
-are not yet attempting to identify which is the correct output form, only
+permutations of \textipa{/se-ol\'u/}, one of which is the correct output form.
+We are not yet attempting to identify which is the correct output form, only
 generate it so it may be picked later. In effect, we are attempting to
 efficiently emulate Optimality Theory's \textsc{Gen}. To do this, we intoduce
 the following core transformations; we model each of these transformations as
@@ -654,8 +654,7 @@ repeat until we have a single candidate left, and return this candidate.
 \begin{figure}[h]
 \caption{Our representation of words in Yoruba, along with our strategy for deletion.}
 \label{fig:impl-deletion}
-\begin{minted}{rust}
-#[derive(Debug, Clone)]
+\begin{minted}[linenos]{rust}
 struct SyllabifiedCandidate {
     form: Vec<Segment>,
     rng: StdRng,
@@ -675,17 +674,18 @@ impl SyllabifiedCandidate {
 We now describe key details of our implementation. The full source code may be
 found at \href{https://github.com/hemantgouni/linguistics-capstone}{github.com/hemantgouni/linguistics-capstone}.
 Starting with the basics, Figure \ref{fig:impl-deletion} shows both our
-representation of Yoruba words, and our simple handling of deletion.
-Specifically, a word is represented as a list of segments (this is the meaning of
-\texttt{Vec<Segment>}). At this point, you might ask: why not represent words simply
+representation of Yoruba words and our simple handling of deletion.
+Specifically, a word is represented as a list of segments; this is denoted by
+\texttt{Vec<Segment>} on line 2.
+At this point, it is reasonable to ask: why not represent words simply
 as a list of characters? What's the difference between a character and a segment?
-This reflects a complication in computers' handling of text beyond simple English
-characters, covered by the ASCII character encoding. Unicode, an improvement of
-ASCII that handles many more languages beyond those which use the Latin alphabet,
-would consider the accent mark and letter \textipa{O} in \textipa{\'O}, to be
-separate characters, and not part of the same. We must sidestep this issue by
+This reflects a complication in computers' handling of text beyond the
+simple English characters covered by the ASCII character encoding. Unicode, an
+improvement of ASCII that handles many more languages beyond those which use the
+Latin alphabet, would consider the accent mark and letter \textipa{O} in \textipa{\'O},
+to be separate characters, and not part of the same. We must sidestep this issue by
 parsing words into \textit{graphemes}, which accounts for the intuitive notion
-of what a character is.
+of what a character is: \textipa{\'O} is a single grapheme.
 
 With that technical hiccup out of the way, our implementation of deletion is much
 simpler. It is interesting to note that within the context of our analysis,
@@ -714,7 +714,7 @@ impl Constraint for Onset {
             .filter(|seg| seg.syllable_index == SyllableIndex::Onset)
             .count();
 
-        onsets - syllabi
+        syllabi - onsets
     }
 }
 \end{minted}
@@ -729,7 +729,7 @@ nuclei in the input (a \texttt{SyllabifiedCandidate} from Figure
 Onsets and nuclei are calculated, along with other linguistic data, upon
 the creation of a \texttt{SyllabifiedCandidate}; we merely analyze them
 here. The number of violations of \onset{} is given by the number of
-onsets minus the number of nuclei. This will never be a negative number,
+nuclei minus the number of onsets. This will never be a negative number,
 because the algorithm that marks onsets and nuclei will only create one
 onset per nucleus, at most (because this is the maximum allowed by
 Yoruba).
@@ -786,12 +786,36 @@ to illustrate with an example. Given \textipa{/ow\'o-k\'i-ow\'o/} as
 input, how would we generate a random candidate output form from it?
 And how would we evaluate it against \onset{} and \dep?
 
+For the sake of simplicity, we'll perform a single deletion operation.
+To do this, we must parse \textipa{/ow\'o-k\'i-ow\'o/} from a string
+into a \texttt{SyllabifiedCandidate}. We split it into each of its
+graphemes, creating the list \{\textipa{o,w,\'o,k,\'i,o,w,\'o}\}. To
+perform a deletion, we simply choose a random element of this list,
+say, [k]. This yields \{\textipa{o,w,\'o,\'i,o,w,\'o}\}.
+
+To find the number of \onset{} violations, we note that our list is
+annotated, internally, as \{\texttt{Nucleus}, \texttt{Onset},
+\texttt{Nucleus}, \texttt{Nucleus}, \texttt{Nucleus}, \texttt{Onset},
+\texttt{Nucleus}\}. Counting the number of nuclei, we find that there
+are 5. There are only two onsets. 5 - 2 = 3, so there are 3
+violations of \onset.
+
+Finally, to count the number of \dep{} violations, we turn
+\{\textipa{o,w,\'o,\'i,o,w,\'o}\} back into the string
+[\textipa{ow\'o\'iow\'o}]. We then use a diff algorithm to determine
+the sequence of edit operations that could be used to arrive at this
+string from \textipa{/ow\'o-k\'i-ow\'o/}. In this case, it tells us
+that a single \texttt{Delete} is all that is necessary, as expected.
+This does not cause any violations of \dep{} because it is not an
+\texttt{Insert} operation, so we return 0 violations.
+
 \subsection{Analysis on corpus data}
 
 In this section we will evaluate all of our collected Yoruba underlying
 representations against the expected surface forms.
 
-TODO: Requires implementation to be reasonably far along first!
+TODO: Do the evaluations now that the implementation is reasonably
+complete!
 
 \section{Concluding}
 
