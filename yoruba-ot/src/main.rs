@@ -1,9 +1,10 @@
-#![allow(dead_code)]
+#![allow(unused_imports)]
 
+mod constraint;
 mod utils;
 
+use crate::constraint::{Constraint, Dep, Ident, Onset, SonSeqPr, Syllabify};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use similar::{DiffOp, TextDiff};
 use unicode_segmentation::UnicodeSegmentation;
 
 use utils::PushRet;
@@ -14,7 +15,7 @@ use utils::PushRet;
 const VOWELS: [&str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
 
 #[derive(Debug, Clone)]
-struct SyllabifiedCandidate {
+pub struct SyllabifiedCandidate {
     form: Vec<Segment>,
     rng: StdRng,
 }
@@ -185,98 +186,10 @@ fn syllabify(candidate: Vec<Segment>) -> Vec<Segment> {
     mark_codas(mark_onsets(mark_vowels(candidate)))
 }
 
-trait Constraint {
-    fn evaluate(self, surface: SyllabifiedCandidate) -> usize;
-}
-
-struct Ident(SyllabifiedCandidate);
-
-impl Constraint for Ident {
-    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
-        let self_str: String = self.0.into();
-        let surface_str: String = surface.into();
-
-        let diff = TextDiff::from_graphemes::<String>(&self_str, &surface_str);
-
-        diff.ops()
-            .iter()
-            .filter(|op| matches!(op, DiffOp::Replace { .. }))
-            .count()
-    }
-}
-
-struct Dep(SyllabifiedCandidate);
-
-impl Constraint for Dep {
-    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
-        let self_str: String = self.0.into();
-        let surface_str: String = surface.into();
-
-        let diff = TextDiff::from_graphemes::<String>(&self_str, &surface_str);
-
-        diff.ops()
-            .iter()
-            .filter(|op| matches!(op, DiffOp::Insert { .. }))
-            .count()
-    }
-}
-
-struct Onset;
-
-impl Constraint for Onset {
-    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
-        let syllabi = surface
-            .form
-            .iter()
-            .filter(|seg| seg.syllable_index == SyllableIndex::Nucleus)
-            .count();
-
-        let onsets = surface
-            .form
-            .iter()
-            .filter(|seg| seg.syllable_index == SyllableIndex::Onset)
-            .count();
-
-        syllabi - onsets
-    }
-}
-
-struct SonSeqPr;
-
-impl Constraint for SonSeqPr {
-    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
-        surface
-            .form
-            .iter()
-            // a hack to ignore accent marks
-            //
-            // .next().unwrap() should never panic here bc that's only possible if the initial
-            // candidate input string is empty, and if that's true, then the iterator will be empty
-            .map(|seg| match dbg!(seg.char.chars().next().unwrap()) {
-                'e' | 'ɛ' | 'o' | 'ɔ' => 1,
-                'u' => 2,
-                'i' => 3,
-                _ => 0,
-            })
-            .sum()
-    }
-}
-
-struct Syllabify;
-
-impl Constraint for Syllabify {
-    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
-        surface
-            .form
-            .iter()
-            .filter(|seg| seg.syllable_index == SyllableIndex::None)
-            .count()
-    }
-}
-
 fn main() {
     let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
-    dbg!(Onset.evaluate(dbg!(syllabified_candidate)));
+    dbg!(Dep(syllabified_candidate.clone())
+        .evaluate(syllabified_candidate.delete().delete().delete().delete()));
 }
 
 #[cfg(test)]
@@ -339,6 +252,16 @@ mod test {
     }
 
     #[test]
+    fn test_dep_1() {
+        let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
+        assert_eq!(
+            Dep(syllabified_candidate.clone())
+                .evaluate(syllabified_candidate.delete().delete().delete().delete()),
+            0
+        )
+    }
+
+    #[test]
     fn test_ssp_1() {
         let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
         assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 7);
@@ -348,5 +271,17 @@ mod test {
     fn test_ssp_2() {
         let syllabified_candidate: SyllabifiedCandidate = "".into();
         assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 0);
+    }
+
+    #[test]
+    fn test_onset_1() {
+        let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
+        assert_eq!(Onset.evaluate(syllabified_candidate), 2);
+    }
+
+    #[test]
+    fn test_syllabify_constraint() {
+        let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
+        assert_eq!(Syllabify.evaluate(syllabified_candidate), 1);
     }
 }
