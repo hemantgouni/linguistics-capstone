@@ -11,10 +11,6 @@ use utils::PushRet;
 // string -> syllabified candidate -> random deletions (all winners generated via deletions) ->
 // eval against constraints
 
-// TODO: make coda filling in more accurate to Yoruba (don't just replace all None with Coda, only
-// insert each coda at an available spot after each nucleus), and make a constraint against
-// unindexed segments
-
 const VOWELS: [&str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
 
 #[derive(Debug, Clone)]
@@ -168,11 +164,21 @@ fn mark_onsets(candidate: Vec<Segment>) -> Vec<Segment> {
 fn mark_codas(candidate: Vec<Segment>) -> Vec<Segment> {
     candidate
         .iter()
-        .map(|seg| match seg.syllable_index {
-            SyllableIndex::None => seg.morph_type(SyllableIndex::Coda),
-            _ => seg.to_owned(),
-        })
-        .collect()
+        .fold(
+            (SyllableIndex::None, Vec::new()),
+            |(prev_seg_type, mut segs), seg| match (prev_seg_type, seg.syllable_index.to_owned()) {
+                (SyllableIndex::Nucleus, SyllableIndex::None) => (
+                    SyllableIndex::Coda,
+                    segs.push_ret(seg.morph_type(SyllableIndex::Coda))
+                        .to_owned(),
+                ),
+                _ => (
+                    seg.syllable_index.to_owned(),
+                    segs.push_ret(seg.to_owned()).to_owned(),
+                ),
+            },
+        )
+        .1
 }
 
 fn syllabify(candidate: Vec<Segment>) -> Vec<Segment> {
@@ -256,8 +262,20 @@ impl Constraint for SonSeqPr {
     }
 }
 
+struct Syllabify;
+
+impl Constraint for Syllabify {
+    fn evaluate(self, surface: SyllabifiedCandidate) -> usize {
+        surface
+            .form
+            .iter()
+            .filter(|seg| seg.syllable_index == SyllableIndex::None)
+            .count()
+    }
+}
+
 fn main() {
-    let syllabified_candidate: SyllabifiedCandidate = dbg!("owoiowo".into());
+    let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
     dbg!(Onset.evaluate(dbg!(syllabified_candidate)));
 }
 
