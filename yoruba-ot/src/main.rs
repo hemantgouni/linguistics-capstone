@@ -1,4 +1,5 @@
 #![allow(unused_imports)]
+#![allow(dead_code)]
 
 mod constraint;
 mod utils;
@@ -7,7 +8,7 @@ use crate::constraint::{Constraint, Dep, Ident, Onset, SonSeqPr, Syllabify};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use unicode_segmentation::UnicodeSegmentation;
 
-use utils::PushRet;
+use utils::{permute_delete, VecRet};
 
 // string -> syllabified candidate -> random deletions (all winners generated via deletions) ->
 // eval against constraints
@@ -51,6 +52,16 @@ impl SyllabifiedCandidate {
             form: syllabify(self.clone().clear_indices().form),
             rng: self.rng,
         }
+    }
+
+    fn permute(&self) -> Vec<Self> {
+        permute_delete(&self.form)
+            .iter()
+            .map(|form| SyllabifiedCandidate {
+                form: form.to_owned(),
+                rng: StdRng::seed_from_u64(7777777),
+            })
+            .collect()
     }
 
     fn clear_indices(self) -> Self {
@@ -187,9 +198,8 @@ fn syllabify(candidate: Vec<Segment>) -> Vec<Segment> {
 }
 
 fn main() {
-    let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
-    dbg!(Dep(syllabified_candidate.clone())
-        .evaluate(syllabified_candidate.delete().delete().delete().delete()));
+    let cand: SyllabifiedCandidate = "owókíowó".into();
+    dbg!(cand.permute());
 }
 
 #[cfg(test)]
