@@ -1,10 +1,14 @@
 #![allow(unused_imports)]
+#![allow(unused_variables)]
 #![allow(dead_code)]
 
 mod constraint;
 mod utils;
 
-use crate::constraint::{Constraint, Dep, Ident, Onset, SonSeqPr, Syllabify};
+use crate::constraint::{
+    Constraint, ConstraintDebug, Dep, Ident, Max, MaxOnsetSonSeqPr, Onset, RankedConstraint,
+    SonSeqPr, Syllabify,
+};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -13,15 +17,21 @@ use utils::{permute_delete, VecRet};
 // string -> syllabified candidate -> random deletions (all winners generated via deletions) ->
 // eval against constraints
 
+// remove accent marks before processing bc we don't have the accented variants of the vowels here?
+// are there other limitations that prevent us from keeping accents?
+//
+// also, i think we look at the first element of the grapheme, right? which should be the bare
+// vowel
+
 const VOWELS: [&str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SyllabifiedCandidate {
     form: Vec<Segment>,
     rng: StdRng,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Segment {
     char: String,
     syllable_index: SyllableIndex,
@@ -58,7 +68,7 @@ impl SyllabifiedCandidate {
         permute_delete(&self.form)
             .iter()
             .map(|form| SyllabifiedCandidate {
-                form: form.to_owned(),
+                form: syllabify(form.to_owned()),
                 rng: StdRng::seed_from_u64(7777777),
             })
             .collect()
@@ -194,12 +204,102 @@ fn mark_codas(candidate: Vec<Segment>) -> Vec<Segment> {
 }
 
 fn syllabify(candidate: Vec<Segment>) -> Vec<Segment> {
-    mark_codas(mark_onsets(mark_vowels(candidate)))
+    // TODO: clean this up and move it into the impl for SyllabifiedCandidate
+    mark_codas(mark_onsets(mark_vowels(
+        candidate
+            .iter()
+            .map(|seg| Segment {
+                char: seg.char.clone(),
+                syllable_index: SyllableIndex::None,
+                seg_type: seg.seg_type.clone(),
+            })
+            .collect(),
+    )))
+}
+
+fn evaluate(
+    underlying_candidate: SyllabifiedCandidate,
+    mut constraints: Vec<Box<RankedConstraint>>,
+) -> Vec<SyllabifiedCandidate> {
+    let surface_forms: Vec<SyllabifiedCandidate> = underlying_candidate.permute();
+
+    constraints
+        .iter()
+        .fold(surface_forms, |forms, constraint| match dbg!(forms.len()) {
+            0 => panic!("No forms to evaluate!"),
+            1 => forms,
+            _ => {
+                let rankings: Vec<(SyllabifiedCandidate, usize)> = forms
+                    .iter()
+                    .map(|form| {
+                        (
+                            form.to_owned(),
+                            constraint.constraint.evaluate(form.to_owned()),
+                        )
+                    })
+                    .collect();
+
+                dbg!(&rankings);
+
+                let min: usize = rankings
+                    .iter()
+                    .min_by(|(cand1, vio1), (cand2, vio2)| vio1.cmp(vio2))
+                    .expect("Iterator was empty!")
+                    .1;
+
+                let next: Vec<SyllabifiedCandidate> = rankings
+                    .iter()
+                    .filter(|(cand, vio_count)| vio_count == &min)
+                    .map(|(cand, vio_count)| cand.to_owned())
+                    .collect();
+
+                dbg!(&constraint.constraint);
+
+                if next.len() == 0 {
+                    print!("All forms eliminated!\n");
+                    forms
+                } else {
+                    next
+                }
+            }
+        })
 }
 
 fn main() {
-    let cand: SyllabifiedCandidate = "owókíowó".into();
-    dbg!(cand.permute());
+    let cand: SyllabifiedCandidate = "owokiowo".into();
+    dbg!(evaluate(
+        cand.clone(),
+        vec![
+            Box::new(RankedConstraint {
+                rank: 0,
+                constraint: Box::new(Syllabify) as Box<dyn ConstraintDebug>,
+            }),
+            Box::new(RankedConstraint {
+                rank: 1,
+                constraint: Box::new(Ident(cand.clone())) as Box<dyn ConstraintDebug>,
+            }),
+            Box::new(RankedConstraint {
+                rank: 1,
+                constraint: Box::new(Dep(cand.clone())) as Box<dyn ConstraintDebug>,
+            }),
+            Box::new(RankedConstraint {
+                rank: 1,
+                constraint: Box::new(MaxOnsetSonSeqPr(cand.clone())) as Box<dyn ConstraintDebug>,
+            }),
+            // Box::new(RankedConstraint {
+            //     rank: 2,
+            //     constraint: Box::new(Max(cand.clone())) as Box<dyn ConstraintDebug>,
+            // }),
+            // Box::new(RankedConstraint {
+            //     rank: 2,
+            //     constraint: Box::new(Onset) as Box<dyn ConstraintDebug>,
+            // }),
+            // Box::new(RankedConstraint {
+            //     rank: 2,
+            //     constraint: Box::new(SonSeqPr) as Box<dyn ConstraintDebug>,
+            // }),
+        ],
+    ));
 }
 
 #[cfg(test)]
