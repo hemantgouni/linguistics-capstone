@@ -1,15 +1,10 @@
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
-
 mod constraint;
 mod utils;
 
 use crate::constraint::{
-    Constraint, Dep, Ident, Max, MaxOnsetSonSeqPr, Onset, RankedConstraint, SonSeqPr, Syllabify,
+    Constraint, Dep, Ident, Max, Onset, RankedConstraint, SonSeqPr, Syllabify,
 };
 use itertools::Itertools;
-use rand::{rngs::StdRng, Rng, SeedableRng};
 use unicode_segmentation::UnicodeSegmentation;
 
 use utils::{permute_delete, VecRet};
@@ -28,7 +23,6 @@ const VOWELS: [&str; 7] = ["o", "ɛ", "ɔ", "i", "u", "a", "e"];
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyllabifiedCandidate {
     form: Vec<Segment>,
-    rng: StdRng,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -53,40 +47,13 @@ enum SegmentType {
 }
 
 impl SyllabifiedCandidate {
-    fn delete(mut self) -> Self {
-        if !self.form.is_empty() {
-            self.form.remove(self.rng.gen_range(0..self.form.len()));
-        }
-
-        SyllabifiedCandidate {
-            form: syllabify(self.clone().clear_indices().form),
-            rng: self.rng,
-        }
-    }
-
     fn permute(&self) -> Vec<Self> {
         permute_delete(&self.form)
             .iter()
             .map(|form| SyllabifiedCandidate {
                 form: syllabify(form.to_owned()),
-                rng: StdRng::seed_from_u64(7777777),
             })
             .collect()
-    }
-
-    fn clear_indices(self) -> Self {
-        SyllabifiedCandidate {
-            form: self
-                .form
-                .iter()
-                .map(|seg| Segment {
-                    char: seg.char.clone(),
-                    syllable_index: SyllableIndex::None,
-                    seg_type: seg.seg_type.clone(),
-                })
-                .collect(),
-            rng: self.rng,
-        }
     }
 }
 
@@ -123,7 +90,6 @@ impl From<&str> for SyllabifiedCandidate {
 
         SyllabifiedCandidate {
             form: syllabify(graphemes),
-            rng: StdRng::seed_from_u64(7777777),
         }
     }
 }
@@ -219,22 +185,22 @@ fn syllabify(candidate: Vec<Segment>) -> Vec<Segment> {
 
 fn evaluate(
     underlying_candidate: SyllabifiedCandidate,
-    mut constraints: Vec<Box<RankedConstraint>>,
+    mut constraints: Vec<RankedConstraint>,
 ) -> Vec<SyllabifiedCandidate> {
     let surface_forms: Vec<SyllabifiedCandidate> = underlying_candidate.permute();
 
     constraints.sort_by(|const1, const2| const1.rank.cmp(&const2.rank));
 
-    let grouped_constraints: Vec<Vec<&Box<RankedConstraint>>> = constraints
+    let grouped_constraints: Vec<Vec<&RankedConstraint>> = constraints
         .iter()
         .group_by(|constraint| constraint.rank > 1)
         .into_iter()
-        .map(|(res, group)| group.collect())
-        .collect::<Vec<Vec<&Box<RankedConstraint>>>>();
+        .map(|(_, group)| group.collect())
+        .collect::<Vec<Vec<&RankedConstraint>>>();
 
     grouped_constraints
         .iter()
-        .fold(surface_forms, |forms, constraint| match dbg!(forms.len()) {
+        .fold(surface_forms, |forms, constraint| match forms.len() {
             0 => panic!("No forms to evaluate!"),
             1 => forms,
             _ => {
@@ -243,24 +209,19 @@ fn evaluate(
                     .map(|form| (form.to_owned(), constraint.evaluate(form.to_owned())))
                     .collect();
 
-                dbg!(&rankings);
-
                 let min: usize = rankings
                     .iter()
-                    .min_by(|(cand1, vio1), (cand2, vio2)| vio1.cmp(vio2))
+                    .min_by(|(_, vio1), (_, vio2)| vio1.cmp(vio2))
                     .expect("Iterator was empty!")
                     .1;
 
                 let next: Vec<SyllabifiedCandidate> = rankings
                     .iter()
-                    .filter(|(cand, vio_count)| vio_count == &min)
-                    .map(|(cand, vio_count)| cand.to_owned())
+                    .filter(|(_, vio_count)| vio_count == &min)
+                    .map(|(cand, _)| cand.to_owned())
                     .collect();
 
-                dbg!(&constraint);
-
-                if next.len() == 0 {
-                    print!("All forms eliminated!\n");
+                if next.is_empty() {
                     forms
                 } else {
                     next
@@ -270,36 +231,36 @@ fn evaluate(
 }
 
 fn main() {
-    let cand: SyllabifiedCandidate = "luilɛ".into();
-    print!(
-        "{:?}\n",
+    let cand: SyllabifiedCandidate = "owokiomo".into();
+    println!(
+        "{:?}",
         evaluate(
             cand.clone(),
             vec![
-                Box::new(RankedConstraint {
+                RankedConstraint {
                     rank: 0,
                     constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                }),
-                Box::new(RankedConstraint {
+                },
+                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
-                }),
-                Box::new(RankedConstraint {
+                },
+                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
-                }),
-                Box::new(RankedConstraint {
+                },
+                RankedConstraint {
                     rank: 2,
                     constraint: Box::new(Onset) as Box<dyn Constraint>,
-                }),
-                Box::new(RankedConstraint {
+                },
+                RankedConstraint {
                     rank: 2,
                     constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
-                }),
-                Box::new(RankedConstraint {
+                },
+                RankedConstraint {
                     rank: 2,
-                    constraint: Box::new(Max(cand.clone())) as Box<dyn Constraint>,
-                }),
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
             ],
         )
         .iter()
@@ -311,52 +272,6 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn test_delete_1() {
-        let cand: SyllabifiedCandidate = "test".into();
-
-        let cand_str: String = cand.delete().into();
-
-        assert_eq!(cand_str, "tst");
-    }
-
-    #[test]
-    fn test_delete_2() {
-        let cand: SyllabifiedCandidate = "test".into();
-
-        let cand_str: String = cand.delete().delete().delete().delete().delete().into();
-
-        assert_eq!(cand_str, "");
-    }
-
-    #[test]
-    fn test_delete_3() {
-        let cand: SyllabifiedCandidate = "owókíowó".into();
-
-        let cand_str: String = cand.delete().delete().delete().delete().into();
-
-        assert_eq!(cand_str, "wówó");
-    }
-
-    #[test]
-    fn test_delete_4() {
-        let cand: SyllabifiedCandidate = "owókíowó".into();
-
-        let cand_str: String = cand
-            .delete()
-            .delete()
-            .delete()
-            .delete()
-            .delete()
-            .delete()
-            .delete()
-            .delete()
-            .into();
-
-        assert_eq!(cand_str, "");
-    }
-
     #[test]
     fn test_ident_1() {
         let cand1: SyllabifiedCandidate = "owókíowó".into();
@@ -370,17 +285,13 @@ mod test {
     #[test]
     fn test_dep_1() {
         let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
-        assert_eq!(
-            Dep(syllabified_candidate.clone())
-                .evaluate(syllabified_candidate.delete().delete().delete().delete()),
-            0
-        )
+        assert_eq!(Dep(syllabified_candidate.clone()).evaluate("".into()), 0)
     }
 
     #[test]
     fn test_ssp_1() {
         let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
-        assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 7);
+        assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 8);
     }
 
     #[test]

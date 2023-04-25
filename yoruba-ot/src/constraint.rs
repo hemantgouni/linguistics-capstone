@@ -1,5 +1,3 @@
-use core::cmp::Ordering;
-
 use crate::{SyllabifiedCandidate, SyllableIndex};
 use similar::{DiffOp, TextDiff};
 
@@ -21,7 +19,7 @@ impl Constraint for RankedConstraint {
     }
 }
 
-impl Constraint for Vec<&Box<RankedConstraint>> {
+impl Constraint for Vec<&RankedConstraint> {
     fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
         self.iter()
             .fold(0, |prev, next| prev + next.evaluate(surface.clone()))
