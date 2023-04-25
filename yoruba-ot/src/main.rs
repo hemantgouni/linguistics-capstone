@@ -6,9 +6,9 @@ mod constraint;
 mod utils;
 
 use crate::constraint::{
-    Constraint, ConstraintDebug, Dep, Ident, Max, MaxOnsetSonSeqPr, Onset, RankedConstraint,
-    SonSeqPr, Syllabify,
+    Constraint, Dep, Ident, Max, MaxOnsetSonSeqPr, Onset, RankedConstraint, SonSeqPr, Syllabify,
 };
+use itertools::Itertools;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -223,7 +223,16 @@ fn evaluate(
 ) -> Vec<SyllabifiedCandidate> {
     let surface_forms: Vec<SyllabifiedCandidate> = underlying_candidate.permute();
 
-    constraints
+    constraints.sort_by(|const1, const2| const1.rank.cmp(&const2.rank));
+
+    let grouped_constraints: Vec<Vec<&Box<RankedConstraint>>> = constraints
+        .iter()
+        .group_by(|constraint| constraint.rank > 1)
+        .into_iter()
+        .map(|(res, group)| group.collect())
+        .collect::<Vec<Vec<&Box<RankedConstraint>>>>();
+
+    grouped_constraints
         .iter()
         .fold(surface_forms, |forms, constraint| match dbg!(forms.len()) {
             0 => panic!("No forms to evaluate!"),
@@ -231,12 +240,7 @@ fn evaluate(
             _ => {
                 let rankings: Vec<(SyllabifiedCandidate, usize)> = forms
                     .iter()
-                    .map(|form| {
-                        (
-                            form.to_owned(),
-                            constraint.constraint.evaluate(form.to_owned()),
-                        )
-                    })
+                    .map(|form| (form.to_owned(), constraint.evaluate(form.to_owned())))
                     .collect();
 
                 dbg!(&rankings);
@@ -253,7 +257,7 @@ fn evaluate(
                     .map(|(cand, vio_count)| cand.to_owned())
                     .collect();
 
-                dbg!(&constraint.constraint);
+                dbg!(&constraint);
 
                 if next.len() == 0 {
                     print!("All forms eliminated!\n");
@@ -266,40 +270,42 @@ fn evaluate(
 }
 
 fn main() {
-    let cand: SyllabifiedCandidate = "owokiowo".into();
-    dbg!(evaluate(
-        cand.clone(),
-        vec![
-            Box::new(RankedConstraint {
-                rank: 0,
-                constraint: Box::new(Syllabify) as Box<dyn ConstraintDebug>,
-            }),
-            Box::new(RankedConstraint {
-                rank: 1,
-                constraint: Box::new(Ident(cand.clone())) as Box<dyn ConstraintDebug>,
-            }),
-            Box::new(RankedConstraint {
-                rank: 1,
-                constraint: Box::new(Dep(cand.clone())) as Box<dyn ConstraintDebug>,
-            }),
-            Box::new(RankedConstraint {
-                rank: 1,
-                constraint: Box::new(MaxOnsetSonSeqPr(cand.clone())) as Box<dyn ConstraintDebug>,
-            }),
-            // Box::new(RankedConstraint {
-            //     rank: 2,
-            //     constraint: Box::new(Max(cand.clone())) as Box<dyn ConstraintDebug>,
-            // }),
-            // Box::new(RankedConstraint {
-            //     rank: 2,
-            //     constraint: Box::new(Onset) as Box<dyn ConstraintDebug>,
-            // }),
-            // Box::new(RankedConstraint {
-            //     rank: 2,
-            //     constraint: Box::new(SonSeqPr) as Box<dyn ConstraintDebug>,
-            // }),
-        ],
-    ));
+    let cand: SyllabifiedCandidate = "luilɛ".into();
+    print!(
+        "{:?}\n",
+        evaluate(
+            cand.clone(),
+            vec![
+                Box::new(RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                }),
+                Box::new(RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                }),
+                Box::new(RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                }),
+                Box::new(RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                }),
+                Box::new(RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                }),
+                Box::new(RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand.clone())) as Box<dyn Constraint>,
+                }),
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>()
+    );
 }
 
 #[cfg(test)]

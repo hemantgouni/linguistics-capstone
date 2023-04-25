@@ -3,24 +3,28 @@ use core::cmp::Ordering;
 use crate::{SyllabifiedCandidate, SyllableIndex};
 use similar::{DiffOp, TextDiff};
 
-pub trait Constraint {
+// need to make this a subtrait of debug since we need to tell rust that everything that implements
+// Constraint must implement Debug since we're using trait objects
+pub trait Constraint: std::fmt::Debug {
     fn evaluate(&self, surface: SyllabifiedCandidate) -> usize;
 }
 
-pub trait ConstraintDebug: Constraint + std::fmt::Debug {}
-
+#[derive(Debug)]
 pub struct RankedConstraint {
     pub rank: usize,
-    pub constraint: Box<dyn ConstraintDebug>,
+    pub constraint: Box<dyn Constraint>,
 }
 
-impl std::fmt::Debug for RankedConstraint {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(
-            fmt,
-            "RankedConstraint {{ rank: {:?}, constraint: {:?} }}\n",
-            self.rank, self.constraint
-        )
+impl Constraint for RankedConstraint {
+    fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
+        self.constraint.evaluate(surface)
+    }
+}
+
+impl Constraint for Vec<&Box<RankedConstraint>> {
+    fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
+        self.iter()
+            .fold(0, |prev, next| prev + next.evaluate(surface.clone()))
     }
 }
 
@@ -41,8 +45,6 @@ impl Constraint for Ident {
     }
 }
 
-impl ConstraintDebug for Ident {}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct Dep(pub SyllabifiedCandidate);
 
@@ -59,8 +61,6 @@ impl Constraint for Dep {
             .count()
     }
 }
-
-impl ConstraintDebug for Dep {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Onset;
@@ -83,8 +83,6 @@ impl Constraint for Onset {
     }
 }
 
-impl ConstraintDebug for Onset {}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct SonSeqPr;
 
@@ -99,15 +97,13 @@ impl Constraint for SonSeqPr {
             // candidate input string is empty, and if that's true, then the iterator will be empty
             .map(|seg| match seg.char.chars().next().unwrap() {
                 'e' | 'ɛ' | 'o' | 'ɔ' => 1,
-                'u' => 2,
-                'i' => 3,
+                'u' => 3,
+                'i' => 4,
                 _ => 0,
             })
             .sum()
     }
 }
-
-impl ConstraintDebug for SonSeqPr {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Syllabify;
@@ -122,8 +118,6 @@ impl Constraint for Syllabify {
     }
 }
 
-impl ConstraintDebug for Syllabify {}
-
 #[derive(Debug)]
 pub struct Max(pub SyllabifiedCandidate);
 
@@ -133,21 +127,17 @@ impl Constraint for Max {
     }
 }
 
-impl ConstraintDebug for Max {}
+// #[derive(Debug)]
+// pub struct MaxOnsetSonSeqPr(pub SyllabifiedCandidate);
 
-#[derive(Debug)]
-pub struct MaxOnsetSonSeqPr(pub SyllabifiedCandidate);
+// impl Constraint for MaxOnsetSonSeqPr {
+//     fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
+//         let max = Max(self.0.clone());
+//         let onset = Onset;
+//         let son_seq_pr = SonSeqPr;
 
-impl Constraint for MaxOnsetSonSeqPr {
-    fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
-        let max = Max(self.0.clone());
-        let onset = Onset;
-        let son_seq_pr = SonSeqPr;
-
-        max.evaluate(surface.clone())
-            + onset.evaluate(surface.clone())
-            + son_seq_pr.evaluate(surface.clone())
-    }
-}
-
-impl ConstraintDebug for MaxOnsetSonSeqPr {}
+//         max.evaluate(surface.clone())
+//             + onset.evaluate(surface.clone())
+//             + son_seq_pr.evaluate(surface.clone())
+//     }
+// }
