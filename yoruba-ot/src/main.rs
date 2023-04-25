@@ -231,7 +231,7 @@ fn evaluate(
 }
 
 fn main() {
-    let cand: SyllabifiedCandidate = "owokiomo".into();
+    let cand: SyllabifiedCandidate = "woilɛ".into();
     println!(
         "{:?}",
         evaluate(
@@ -303,12 +303,363 @@ mod test {
     #[test]
     fn test_onset_1() {
         let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
-        assert_eq!(Onset.evaluate(syllabified_candidate), 2);
+        assert_eq!(Onset.evaluate(syllabified_candidate), 6);
     }
 
     #[test]
     fn test_syllabify_constraint() {
         let syllabified_candidate: SyllabifiedCandidate = dbg!("owoktwiowo".into());
         assert_eq!(Syllabify.evaluate(syllabified_candidate), 1);
+    }
+
+    #[test]
+    fn test_evaluate_1() {
+        let cand: SyllabifiedCandidate = "seolu".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["selu", "solu"])
+    }
+
+    #[test]
+    fn test_evaluate_2() {
+        let cand: SyllabifiedCandidate = "owokiowo".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["owokowo"])
+    }
+
+    #[test]
+    fn test_evaluate_3() {
+        let cand: SyllabifiedCandidate = "d͡ʒuigi".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["d͡ʒugi"])
+    }
+
+    #[test]
+    fn test_evaluate_4() {
+        let cand: SyllabifiedCandidate = "luilɛ".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["lulɛ"])
+    }
+
+    #[test]
+    fn test_evaluate_5() {
+        let cand: SyllabifiedCandidate = "buomi".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["bomi"])
+    }
+
+    #[test]
+    fn test_evaluate_6() {
+        let cand: SyllabifiedCandidate = "ruepo".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["repo"])
+    }
+
+    #[test]
+    fn test_evaluate_7() {
+        let cand: SyllabifiedCandidate = "woilɛ".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["wolɛ"])
+    }
+
+    #[test]
+    fn test_evaluate_8() {
+        let cand: SyllabifiedCandidate = "buɔba".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["bɔba"])
+    }
+
+    #[test]
+    fn test_evaluate_10() {
+        let cand: SyllabifiedCandidate = "d͡ʒiaʃɔ".into();
+        let surface_forms = evaluate(
+            cand.clone(),
+            vec![
+                RankedConstraint {
+                    rank: 0,
+                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 1,
+                    constraint: Box::new(Dep(cand.clone())) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Onset) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(SonSeqPr) as Box<dyn Constraint>,
+                },
+                RankedConstraint {
+                    rank: 2,
+                    constraint: Box::new(Max(cand)) as Box<dyn Constraint>,
+                },
+            ],
+        )
+        .iter()
+        .map(|cand| String::from(cand.to_owned()))
+        .collect::<Vec<String>>();
+
+        assert_eq!(surface_forms, vec!["d͡ʒaʃɔ"])
     }
 }

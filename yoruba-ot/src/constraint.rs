@@ -77,7 +77,7 @@ impl Constraint for Onset {
             .filter(|seg| seg.syllable_index == SyllableIndex::Onset)
             .count();
 
-        syllabi - onsets
+        (syllabi - onsets) * 3
     }
 }
 
@@ -121,7 +121,24 @@ pub struct Max(pub SyllabifiedCandidate);
 
 impl Constraint for Max {
     fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
-        (self.0.form.len() - surface.form.len()) * 3
+        let mut violations = (self.0.form.len() - surface.form.len()) * 3;
+
+        if surface.form.len() != 0 {
+            if dbg!(&surface.form[0].char) != dbg!(&self.0.form[0].char)
+                || dbg!(&surface.form[surface.form.len() - 1].char)
+                    != dbg!(&self.0.form[self.0.form.len() - 1].char)
+            {
+                violations += 101;
+            }
+        }
+
+        println!(
+            "{:?} has {:?} violations",
+            String::from(surface),
+            &violations
+        );
+
+        violations
     }
 }
 
