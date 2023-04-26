@@ -128,14 +128,8 @@ impl Constraint for Max {
                 || surface.form[surface.form.len() - 1].char
                     != self.0.form[self.0.form.len() - 1].char)
         {
-            violations += 101;
+            violations += 11;
         }
-
-        println!(
-            "{:?} has {:?} violations",
-            String::from(surface),
-            &violations
-        );
 
         violations
     }

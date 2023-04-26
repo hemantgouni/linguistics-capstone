@@ -76,18 +76,7 @@ fn get_seg_type(grapheme: &str) -> SegmentType {
 
 impl From<&str> for SyllabifiedCandidate {
     fn from(str: &str) -> SyllabifiedCandidate {
-        let underlying_final: Vec<usize> = str
-            .grapheme_indices(true)
-            .filter_map(|(index, grapheme)| {
-                if grapheme == "-" {
-                    Some(index + 1)
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        let underlying_initial: Vec<usize> = str
+        let mut underlying_final: Vec<usize> = str
             .grapheme_indices(true)
             .filter_map(|(index, grapheme)| {
                 if grapheme == "-" {
@@ -98,6 +87,23 @@ impl From<&str> for SyllabifiedCandidate {
             })
             .collect();
 
+        if str.graphemes(true).count() != 0 {
+            underlying_final.push(str.graphemes(true).count() - 1);
+        }
+
+        let mut underlying_initial: Vec<usize> = str
+            .grapheme_indices(true)
+            .filter_map(|(index, grapheme)| {
+                if grapheme == "-" {
+                    Some(index + 1)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        underlying_initial.push(0);
+
         let mut graphemes: Vec<Segment> = str
             .grapheme_indices(true)
             .filter_map(|(index, grapheme)| match grapheme {
@@ -107,9 +113,9 @@ impl From<&str> for SyllabifiedCandidate {
                     syllable_index: SyllableIndex::None,
                     seg_type: get_seg_type(grapheme),
                     underlying_index: if underlying_final.contains(&index) {
-                        UnderlyingIndex::Initial
-                    } else if underlying_initial.contains(&index) {
                         UnderlyingIndex::Final
+                    } else if underlying_initial.contains(&index) {
+                        UnderlyingIndex::Initial
                     } else {
                         UnderlyingIndex::Middle
                     },
@@ -243,8 +249,6 @@ fn evaluate(
         .map(|(_, group)| group.collect())
         .collect::<Vec<Vec<&RankedConstraint>>>();
 
-    dbg!(&grouped_constraints);
-
     grouped_constraints
         .iter()
         .fold(surface_forms, |forms, constraint| match forms.len() {
@@ -255,6 +259,20 @@ fn evaluate(
                     .iter()
                     .map(|form| (form.to_owned(), constraint.evaluate(form.to_owned())))
                     .collect();
+
+                rankings
+                    .iter()
+                    .map(|(cand, vios)| {
+                        println!(
+                            "{:?} has {:?} violations of {:#?}",
+                            String::from(cand.to_owned()),
+                            vios,
+                            constraint
+                        )
+                    })
+                    // dropping a bunch of references; we just need this to consume the iterator,
+                    // since they're lazy
+                    .for_each(drop);
 
                 let min: usize = rankings
                     .iter()
@@ -929,7 +947,7 @@ mod test {
         .collect::<Vec<String>>();
 
         assert_eq!(surface_forms, vec!["d͡ʒaʃɔ"])
-    } 
+    }
 
     #[test]
     fn test_evaluate_13() {
