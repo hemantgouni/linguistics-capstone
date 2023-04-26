@@ -123,13 +123,12 @@ impl Constraint for Max {
     fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
         let mut violations = (self.0.form.len() - surface.form.len()) * 3;
 
-        if surface.form.len() != 0 {
-            if dbg!(&surface.form[0].char) != dbg!(&self.0.form[0].char)
-                || dbg!(&surface.form[surface.form.len() - 1].char)
-                    != dbg!(&self.0.form[self.0.form.len() - 1].char)
-            {
-                violations += 101;
-            }
+        if !surface.form.is_empty()
+            && (surface.form[0].char != self.0.form[0].char
+                || surface.form[surface.form.len() - 1].char
+                    != self.0.form[self.0.form.len() - 1].char)
+        {
+            violations += 101;
         }
 
         println!(
@@ -185,18 +184,3 @@ impl Constraint for MaxFinalV {
         underlying_final - surface_final
     }
 }
-
-// #[derive(Debug)]
-// pub struct MaxOnsetSonSeqPr(pub SyllabifiedCandidate);
-
-// impl Constraint for MaxOnsetSonSeqPr {
-//     fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
-//         let max = Max(self.0.clone());
-//         let onset = Onset;
-//         let son_seq_pr = SonSeqPr;
-
-//         max.evaluate(surface.clone())
-//             + onset.evaluate(surface.clone())
-//             + son_seq_pr.evaluate(surface.clone())
-//     }
-// }
