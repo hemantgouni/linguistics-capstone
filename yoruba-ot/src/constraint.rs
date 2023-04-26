@@ -1,4 +1,4 @@
-use crate::{SyllabifiedCandidate, SyllableIndex};
+use crate::{SyllabifiedCandidate, SyllableIndex, UnderlyingIndex};
 use similar::{DiffOp, TextDiff};
 
 // need to make this a subtrait of debug since we need to tell rust that everything that implements
@@ -139,6 +139,50 @@ impl Constraint for Max {
         );
 
         violations
+    }
+}
+
+#[derive(Debug)]
+pub struct MaxInitialV(pub SyllabifiedCandidate);
+
+impl Constraint for MaxInitialV {
+    fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
+        let underlying_init = self
+            .0
+            .form
+            .iter()
+            .filter(|seg| seg.underlying_index == UnderlyingIndex::Initial)
+            .count();
+
+        let surface_init = surface
+            .form
+            .iter()
+            .filter(|seg| seg.underlying_index == UnderlyingIndex::Initial)
+            .count();
+
+        underlying_init - surface_init
+    }
+}
+
+#[derive(Debug)]
+pub struct MaxFinalV(pub SyllabifiedCandidate);
+
+impl Constraint for MaxFinalV {
+    fn evaluate(&self, surface: SyllabifiedCandidate) -> usize {
+        let underlying_final = self
+            .0
+            .form
+            .iter()
+            .filter(|seg| seg.underlying_index == UnderlyingIndex::Final)
+            .count();
+
+        let surface_final = surface
+            .form
+            .iter()
+            .filter(|seg| seg.underlying_index == UnderlyingIndex::Final)
+            .count();
+
+        underlying_final - surface_final
     }
 }
 
