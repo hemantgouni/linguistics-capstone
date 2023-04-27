@@ -31,7 +31,7 @@ struct Segment {
     char: String,
     syllable_index: SyllableIndex,
     seg_type: SegmentType,
-    underlying_index: UnderlyingIndex,
+    morpheme_index: UnderlyingIndex,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -112,7 +112,7 @@ impl From<&str> for SyllabifiedCandidate {
                     char: grapheme.to_owned(),
                     syllable_index: SyllableIndex::None,
                     seg_type: get_seg_type(grapheme),
-                    underlying_index: if underlying_final.contains(&index) {
+                    morpheme_index: if underlying_final.contains(&index) {
                         UnderlyingIndex::Final
                     } else if underlying_initial.contains(&index) {
                         UnderlyingIndex::Initial
@@ -155,7 +155,7 @@ impl Segment {
             char: self.char.clone(),
             syllable_index: seg_type,
             seg_type: self.seg_type.clone(),
-            underlying_index: self.underlying_index.clone(),
+            morpheme_index: self.morpheme_index.clone(),
         }
     }
 }
@@ -228,7 +228,7 @@ fn syllabify(candidate: Vec<Segment>) -> Vec<Segment> {
                 char: seg.char.clone(),
                 syllable_index: SyllableIndex::None,
                 seg_type: seg.seg_type.clone(),
-                underlying_index: seg.underlying_index.clone(),
+                morpheme_index: seg.morpheme_index.clone(),
             })
             .collect(),
     )))
@@ -260,6 +260,7 @@ fn evaluate(
                     .map(|form| (form.to_owned(), constraint.evaluate(form.to_owned())))
                     .collect();
 
+                #[cfg(debug_assertions)]
                 rankings
                     .iter()
                     .map(|(cand, vios)| {
@@ -307,7 +308,7 @@ fn main() {
 
         stdin().read_line(&mut buffer).unwrap();
 
-        let cand: SyllabifiedCandidate = (&buffer.trim_end()[..]).into();
+        let cand: SyllabifiedCandidate = buffer.trim_end().into();
 
         println!(
             "{:?}",
@@ -352,6 +353,7 @@ fn main() {
             .map(|cand| String::from(cand.to_owned()))
             .collect::<Vec<String>>()
         );
+
         buffer.clear();
     }
 }

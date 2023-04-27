@@ -144,13 +144,13 @@ impl Constraint for MaxInitialV {
             .0
             .form
             .iter()
-            .filter(|seg| seg.underlying_index == UnderlyingIndex::Initial)
+            .filter(|seg| seg.morpheme_index == UnderlyingIndex::Initial)
             .count();
 
         let surface_init = surface
             .form
             .iter()
-            .filter(|seg| seg.underlying_index == UnderlyingIndex::Initial)
+            .filter(|seg| seg.morpheme_index == UnderlyingIndex::Initial)
             .count();
 
         underlying_init - surface_init
@@ -166,13 +166,13 @@ impl Constraint for MaxFinalV {
             .0
             .form
             .iter()
-            .filter(|seg| seg.underlying_index == UnderlyingIndex::Final)
+            .filter(|seg| seg.morpheme_index == UnderlyingIndex::Final)
             .count();
 
         let surface_final = surface
             .form
             .iter()
-            .filter(|seg| seg.underlying_index == UnderlyingIndex::Final)
+            .filter(|seg| seg.morpheme_index == UnderlyingIndex::Final)
             .count();
 
         underlying_final - surface_final
