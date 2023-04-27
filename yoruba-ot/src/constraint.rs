@@ -95,8 +95,8 @@ impl Constraint for SonSeqPr {
             // candidate input string is empty, and if that's true, then the iterator will be empty
             .map(|seg| match seg.char.chars().next().unwrap() {
                 'e' | 'ɛ' | 'o' | 'ɔ' => 1,
-                'u' => 3,
-                'i' => 4,
+                'u' => 2,
+                'i' => 3,
                 _ => 0,
             })
             .sum()
@@ -128,7 +128,7 @@ impl Constraint for Max {
                 || surface.form[surface.form.len() - 1].char
                     != self.0.form[self.0.form.len() - 1].char)
         {
-            violations += 11;
+            violations += 1;
         }
 
         violations

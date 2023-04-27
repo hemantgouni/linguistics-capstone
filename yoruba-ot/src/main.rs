@@ -316,10 +316,6 @@ fn main() {
                 cand.clone(),
                 vec![
                     RankedConstraint {
-                        rank: 0,
-                        constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                    },
-                    RankedConstraint {
                         rank: 1,
                         constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                     },
@@ -380,7 +376,7 @@ mod test {
     #[test]
     fn test_ssp_1() {
         let syllabified_candidate: SyllabifiedCandidate = "owókíowó".into();
-        assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 8);
+        assert_eq!(SonSeqPr.evaluate(syllabified_candidate), 7);
     }
 
     #[test]
@@ -407,10 +403,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -455,10 +447,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -501,10 +489,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -549,10 +533,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -595,10 +575,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -643,10 +619,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -689,10 +661,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -737,10 +705,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -783,10 +747,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -831,10 +791,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -877,10 +833,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -925,10 +877,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -971,10 +919,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -1019,10 +963,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -1065,10 +1005,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
@@ -1113,10 +1049,6 @@ mod test {
             cand.clone(),
             vec![
                 RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
-                RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
                 },
@@ -1159,10 +1091,6 @@ mod test {
         let surface_forms = evaluate(
             cand.clone(),
             vec![
-                RankedConstraint {
-                    rank: 0,
-                    constraint: Box::new(Syllabify) as Box<dyn Constraint>,
-                },
                 RankedConstraint {
                     rank: 1,
                     constraint: Box::new(Ident(cand.clone())) as Box<dyn Constraint>,
