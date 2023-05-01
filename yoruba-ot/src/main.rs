@@ -3,7 +3,6 @@ mod utils;
 
 use crate::constraint::{
     Constraint, Dep, Ident, Max, MaxFinalV, MaxInitialV, Onset, RankedConstraint, SonSeqPr,
-    Syllabify,
 };
 use itertools::Itertools;
 use unicode_segmentation::UnicodeSegmentation;
@@ -357,6 +356,8 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::constraint::Syllabify;
+
     #[test]
     fn test_ident_1() {
         let cand1: SyllabifiedCandidate = "owókíowó".into();
