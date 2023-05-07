@@ -449,42 +449,6 @@ We now have a complete ranking that accounts for all the data shown in
 
 \pagebreak
 
-\begin{figure}[h]
-\caption{Yoruba Surface Forms}
-\label{fig:data}
-\begin{tabular}{c c c c}
-    \textbf{Word} & \textbf{Gloss} & \textbf{Word} & \textbf{Gloss}\\
-    \textipa{ow\'o} & money & \textipa{k\'i} & any\\
-    \textipa{OmO} & child & se & cook\\
-    \textipa{ol\'u} & mushrooms & \textipa{\textdyoghlig{}E} & eat\\
-    \textipa{ed\'e} & shrimp & \textipa{\textdyoghlig{}\'o} & burn\\
-    \textipa{\`Ew\`u} & clothing & \textipa{Ra} & buy\\
-    \textipa{\`Og\`Ed\`E} & banana & \textipa{n\'i} & at\\
-    \textipa{s\'i} & to & \textipa{O\textdyoghlig{}\`a} & market\\
-    \textipa{ow\'ok\'ow\'o} & any money at all | bad money & \textipa{\textdyoghlig{}ed\'e} & eat shrimp\\
-    \textipa{OmOk\'OmO} & any child at all | bad child & \textipa{sol\'u} & cook mushrooms\\
-    \textipa{\textdyoghlig{}\'Ew\`u} & burn clothing & \textipa{R\`Og\`Ed\`E} & buy bananas\\
-    \textipa{l\'oko} & at the farm & \textipa{s\'O\textdyoghlig{}\`a} & to the market\\
-    \textipa{gb\'e} & lift & \textipa{in\'O} & lamp\\
-    \textipa{gba} & take & \textipa{iS\'E} & job\\
-    \textipa{wo} & look & \textipa{il\`E} & ground\\
-    \textipa{\textdyoghlig{}\'i} & steal & \textipa{aSO} & clothes\\
-    \textipa{gb\'en\'O} & lift the lamp & \textipa{gbaS\'E} & take a job\\
-    \textipa{wol\`E} & look at the ground & \textipa{\textdyoghlig{}\'aSO} & steal clothes\\
-    \textipa{\textdyoghlig{}u} & throw & \textipa{igi} & stick\\
-    \textipa{lu} & hit & \textipa{il\`E} & ground\\
-    \textipa{bu} & take & \textipa{omi} & water\\
-    \textipa{Ru} & carry & \textipa{epo} & oil\\
-    \textipa{b\'u} & abuse & \textipa{Oba} & king\\
-    \textipa{\textdyoghlig{}ugi} & throw a stick & \textipa{lul\`E} & hit the ground\\
-    \textipa{bomi} & take water & \textipa{Repo} & carry oil\\
-    \textipa{b\'Oba} & abuse the king & \textipa{b\'i} & have\\
-    \textipa{b\'imO} & have a baby\\
-\end{tabular}
-\end{figure}
-
-\pagebreak
-
 \section{Computing Optimal Surface Forms}
 \label{sec:computing-optimal-surface-forms}
 
@@ -533,13 +497,16 @@ test our analysis quickly and thoroughly given new data, ensuring that it holds
 and giving us opportunities to improve it otherwise.
 
 \subsection{Approach}
+\label{subsec:approach}
 
 We base our procedure, crucially, on bounded depth-first search. We first
-describe the basic algorithm, before proceeding onwards to an implementation.
-Viewed as a single function which takes an input and returns an output, our
-analysis takes as input an underlying form and a set of ranked constraints,
-and searches for the correct output form. The search for the correct output
-is of course the crucial portion here, and is the part on which most of the
+describe a basic and idealized algorithm, before proceeding onwards to an
+implementation section where we will discuss certain shortcuts which can be
+taken due to convenient properties of vowel elision in Yoruba. Viewed as a
+single function which takes an input and returns an output, our analysis 
+takes as input an underlying form and a set of ranked constraints, and
+searches for the correct output form. The search for the correct output is
+of course the crucial portion here, and is the part on which most of the
 discussion will be spent.
 
 Our basic approach employs \textit{bounded depth-first search}. It is best to
@@ -675,7 +642,7 @@ impl SyllabifiedCandidate {
 
 We now describe key details of our implementation. The full source code may be
 found at \href{https://github.com/hemantgouni/linguistics-capstone}{github.com/hemantgouni/linguistics-capstone}.
-Starting with the basics, Figure \ref{fig:impl-deletion} shows both our
+Starting with the basics, Figure \pref{fig:impl-deletion} shows both our
 representation of Yoruba words and our simple handling of deletion.
 Specifically, a word is represented as a list of segments; this is denoted by
 \texttt{Vec<Segment>} on line 2.
@@ -693,10 +660,14 @@ With that technical hiccup out of the way, our implementation of deletion is muc
 simpler. It is interesting to note that within the context of our analysis,
 deletion turns out to be the most important of the operations to implement, because
 winning candidates are always generated via deletion (due to high-ranking \dep{}
-and \ident{} constraints). We implement deletion by picking a random element of
-the list of segments and removing it. Because we cluster characters by Unicode
-graphemes, the probability of any single character being deleted is evenly
-distributed between all in a given word.
+and \ident{} constraints). In fact, in the context of our specific analysis, it is
+easy to generate \textit{all possible} surface forms instead of limiting ourselves to
+the previously mentioned 65536 output forms, simply by choosing to delete or not
+delete each segment. This yields $2^n$ possible output forms for a given input
+form, where $n$ is the number of segments in the input form. We implement deletion
+by picking a random element of the list of segments and removing it. Because we
+cluster characters by Unicode graphemes, the probability of any single character
+being deleted is evenly distributed between all in a given word.
 
 \begin{figure}[h!]
 \caption{Our implementation of \onset}
@@ -724,10 +695,10 @@ impl Constraint for Onset {
 
 The other significant portion of our implementation, beyond generating
 candidates, is evaluating them. This, of course, is done with constraints.
-Figure \ref{fig:impl-onset} shows our implementation of the \onset{}
+Figure \pref{fig:impl-onset} shows our implementation of the \onset{}
 markedness constraint. On lines 2-7, we count the number of syllable
 nuclei in the input (a \texttt{SyllabifiedCandidate} from Figure
-\ref{fig:impl-deletion}). On lines 9-13, we count the number of onsets.
+\pref{fig:impl-deletion}). On lines 9-13, we count the number of onsets.
 Onsets and nuclei are calculated, along with other linguistic data, upon
 the creation of a \texttt{SyllabifiedCandidate}; we merely analyze them
 here. The number of violations of \onset{} is given by the number of
@@ -761,7 +732,7 @@ impl Constraint for Dep {
 Of course, no discussion of constraints would be complete without
 \textit{faithfulness} constraints. These present an interesting challenge,
 but we first provide an overview of the implementation, which is provided
-in Figure \ref{fig:impl-dep}. On lines 5 and 6, we respectively turn the
+in Figure \pref{fig:impl-dep}. On lines 5 and 6, we respectively turn the
 original underlying form and the candidate surface form into their string
 respresentations. We then use a diff algorithm on these strings on line 8,
 which returns a sequence of operations which could be performed on the
@@ -814,12 +785,146 @@ This does not cause any violations of \dep{} because it is not an
 \subsection{Analysis on corpus data}
 
 In this section we will evaluate all of our collected Yoruba underlying
-representations against the expected surface forms.
+representations against the expected surface forms. The constraints
+used in our analysis, along with their rankings, are listed here:
 
-TODO: Do the evaluations now that the implementation is reasonably
-complete!
+\begin{enumerate}
+    \item
+        \begin{enumerate}
+            \item \ident{}
+            \item \dep{}
+        \end{enumerate}
+    \item
+        \begin{enumerate}
+            \item \onset{}
+            \item \ssp{}
+            \item \maxc{}
+        \end{enumerate}
+    \item
+        \begin{enumerate}
+            \item \maxplusv{}
+        \end{enumerate}
+    \item
+        \begin{enumerate}
+            \item \maxvplus{}
+        \end{enumerate}
+\end{enumerate}
+
+The number under which each constraint is listed denotes its rank.
+For example, \ident{} and \dep{} have the highest ranking, followed
+by \onset{}, \ssp{}, and \maxc{}. This largely matches
+Fig. \pref{tableau:summary-two}, but with the inclusion of an extra
+\maxc{} constraint at rank two. This is necessary because,
+otherwise, our program (correctly) finds deleting the input form
+to be the optimal solution to the set of constraints given. That is,
+neither of the rank 1 constraints (\ident{} and \dep{}), nor the
+constraints immediately below them (\onset{} and \ssp{}), generate
+violations for deleting words. On the other hand, a form with no
+segments will \textit{always} generate less violations of \onset{}
+and \ssp{} than one which does-- the mere presence of a vowel in a
+form is sufficient to generate \ssp{} violations. Adding a \maxc{}
+constraint ranked equally to \onset{} and \ssp{} addresses this.
+Indeed, this is not an issue with our implementation, but a more
+fundamental issue with our analysis which was found by it. In that
+sense, we can see that the benefits of computationally encoding the
+analysis are already emerging.
+
+An additional point to note is that, when evaluating candidates,
+instead of considering equally-ranked constraints individually, we
+treat violations between them cumulatively. As a result, since
+\ssp{} generates multiple violations at a time (for instance [i]
+will generate 3 violations, per Figure
+\pref{table:vowel-sonority-v2}), in order for \maxc{} to
+adequately regulate against deletion, it must generate multiple
+(specifically, 3) violations for each deletion. In addition,
+\onset{}, being equally ranked to \ssp{} and \maxc{}, must also
+do this. This quirk of our implementation is certainly
+unconventional among the OT literature, and further study might
+better support some of these choices (or provide more elegant
+alternative solutions).
+
+Beyond these issue, our analysis is sound. Given an underlying
+Yoruba form, the program implementing it will produce the
+appropriately vowel-elided surface form. In other words, given
+the information in the `Underlying' columns of tables
+\pref{fig:deletion-simple}, \pref{fig:deletion-except-1},
+\pref{fig:deletion-except-1}, our program outputs the
+form expected in the 'Surface' columns (excepting
+\textipa{/n\'i-oko/} \rightarrow{} \textipa{[l\'oko]},
+since the n \rightarrow{} l transition occurs for reasons
+unrelated to our analysis; we also ignore tone markers
+here, because it is a related but orthogonal phenomenon
+unhandled by our original analysis).
+
+In fact, it will even produce the intuitively expected surface
+form when given underlying forms which do not exist. For
+instance, given \textipa{[so-el\'u]} as an input, it will produce
+\textipa{/sel\'u/}, due to \maxplusv{} regulating more
+strictly against initial vowel deletion than deletion of
+final vowels.
 
 \section{Concluding}
+
+In this paper, we presented a classic Optimality-Theoretic
+analysis of conjoined vowel elision in Yoruba. We then
+implemented it as a computer program, finding a subtle
+issue in the analysis. With these issues addressed in the
+implementation, our program outputs the correctly
+vowel-elided surface form, given an underlying
+representation. Future work could go in several interesting
+directions. Within the domain of Yoruba, the original
+analysis and its implementation could be extended to handle
+the assimilatory strategy for dealing with sequences of
+vowels at morpheme boundaries (as discussed in
+\cite{ola2002yoruba}), as well as tone. This would likely
+involve extending surface candidate generation to the full
+idealized algorithm described in Section
+\ref{subsec:approach}, contending with epenthesis,
+metathesis, and segment changes in addition to deletion.
+The implementation, as it exists, faithfully models the
+parts of the algorithm in \ref{subsec:approach} that are
+necessary in the context of Yoruba, so this would largely
+be a case of extending the existing machinery.
+
+\pagebreak
+
+\section{Appendix}
+
+\begin{figure}[h]
+\caption{Yoruba Surface Forms}
+\label{fig:data}
+\begin{tabular}{c c c c}
+    \textbf{Word} & \textbf{Gloss} & \textbf{Word} & \textbf{Gloss}\\
+    \textipa{ow\'o} & money & \textipa{k\'i} & any\\
+    \textipa{OmO} & child & se & cook\\
+    \textipa{ol\'u} & mushrooms & \textipa{\textdyoghlig{}E} & eat\\
+    \textipa{ed\'e} & shrimp & \textipa{\textdyoghlig{}\'o} & burn\\
+    \textipa{\`Ew\`u} & clothing & \textipa{Ra} & buy\\
+    \textipa{\`Og\`Ed\`E} & banana & \textipa{n\'i} & at\\
+    \textipa{s\'i} & to & \textipa{O\textdyoghlig{}\`a} & market\\
+    \textipa{ow\'ok\'ow\'o} & any money at all | bad money & \textipa{\textdyoghlig{}ed\'e} & eat shrimp\\
+    \textipa{OmOk\'OmO} & any child at all | bad child & \textipa{sol\'u} & cook mushrooms\\
+    \textipa{\textdyoghlig{}\'Ew\`u} & burn clothing & \textipa{R\`Og\`Ed\`E} & buy bananas\\
+    \textipa{l\'oko} & at the farm & \textipa{s\'O\textdyoghlig{}\`a} & to the market\\
+    \textipa{gb\'e} & lift & \textipa{in\'O} & lamp\\
+    \textipa{gba} & take & \textipa{iS\'E} & job\\
+    \textipa{wo} & look & \textipa{il\`E} & ground\\
+    \textipa{\textdyoghlig{}\'i} & steal & \textipa{aSO} & clothes\\
+    \textipa{gb\'en\'O} & lift the lamp & \textipa{gbaS\'E} & take a job\\
+    \textipa{wol\`E} & look at the ground & \textipa{\textdyoghlig{}\'aSO} & steal clothes\\
+    \textipa{\textdyoghlig{}u} & throw & \textipa{igi} & stick\\
+    \textipa{lu} & hit & \textipa{il\`E} & ground\\
+    \textipa{bu} & take & \textipa{omi} & water\\
+    \textipa{Ru} & carry & \textipa{epo} & oil\\
+    \textipa{b\'u} & abuse & \textipa{Oba} & king\\
+    \textipa{\textdyoghlig{}ugi} & throw a stick & \textipa{lul\`E} & hit the ground\\
+    \textipa{bomi} & take water & \textipa{Repo} & carry oil\\
+    \textipa{b\'Oba} & abuse the king & \textipa{b\'i} & have\\
+    \textipa{b\'imO} & have a baby\\
+\end{tabular}
+\end{figure}
+
+\pagebreak
 
 \printbibliography
 
