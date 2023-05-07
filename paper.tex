@@ -646,33 +646,35 @@ impl SyllabifiedCandidate {
 \end{figure}
 
 We now describe key details of our implementation. The full source code may be
-found at \href{https://github.com/hemantgouni/linguistics-capstone}{github.com/hemantgouni/linguistics-capstone}.
+found at
+\href{https://github.com/hemantgouni/linguistics-capstone}{github.com/hemantgouni/linguistics-capstone}.
 Starting with the basics, Figure \pref{fig:impl-deletion} shows both our
 representation of Yoruba words and our simple handling of deletion.
 Specifically, a word is represented as a list of segments; this is denoted by
-\texttt{Vec<Segment>} on line 2.
-At this point, it is reasonable to ask: why not represent words simply
-as a list of characters? What's the difference between a character and a segment?
-This reflects a complication in computers' handling of text beyond the
-simple English characters covered by the ASCII character encoding. Unicode, an
-improvement of ASCII that handles many more languages beyond those which use the
-Latin alphabet, would consider the accent mark and letter \textipa{O} in \textipa{\'O},
-to be separate characters and not parts of the same. We must sidestep this issue by
-parsing words into \textit{graphemes}, which accounts for the intuitive notion
-of what a character is: \textipa{\'O} is a single grapheme.
+\texttt{Vec<Segment>} on line 2. At this point, it is reasonable to ask: why
+not represent words simply as a list of characters? What's the difference
+between a character and a segment? This reflects a complication in computers'
+handling of text beyond the simple English characters covered by the ASCII
+character encoding. Unicode, an improvement of ASCII that handles many more
+languages beyond those which use the Latin alphabet, would consider the accent
+mark and letter \textipa{O} in \textipa{\'O}, to be separate characters and not
+parts of the same. We must sidestep this issue by parsing words into
+\textit{graphemes}, which accounts for the intuitive notion of what a character
+is: \textipa{\'O} is a single grapheme.
 
-With that technical hiccup out of the way, our implementation of deletion is much
-simpler. It is interesting to note that within the context of our analysis,
-deletion turns out to be the most important of the operations to implement, because
-winning candidates are always generated via deletion (due to high-ranking \dep{}
-and \ident{} constraints). In fact, in the context of our specific analysis, it is
-easy to generate \textit{all possible} surface forms instead of limiting ourselves to
-the previously mentioned 65536 output forms, simply by choosing to delete or not
-delete each segment. This yields $2^n$ possible output forms for a given input
-form, where $n$ is the number of segments in the input form. We implement deletion
-by picking a random element of the list of segments and removing it. Because we
-cluster characters by Unicode graphemes, the probability of any single character
-being deleted is evenly distributed between all in a given word.
+With that technical hiccup out of the way, our implementation of deletion is
+much simpler. It is interesting to note that within the context of our
+analysis, deletion turns out to be the most important of the operations to
+implement, because winning candidates are always generated via deletion (due to
+high-ranking \dep{} and \ident{} constraints). In fact, in the context of our
+specific analysis, it is easy to generate \textit{all possible} surface forms
+instead of limiting ourselves to the previously mentioned 65536 output forms,
+simply by choosing to delete or not delete each segment. This yields $2^n$
+possible output forms for a given input form, where $n$ is the number of
+segments in the input form. We implement deletion by picking a random element
+of the list of segments and removing it. Because we cluster characters by
+Unicode graphemes, the probability of any single character being deleted is
+evenly distributed between all in a given word.
 
 \begin{figure}[h!]
 \caption{Our implementation of \onset}
@@ -701,16 +703,15 @@ impl Constraint for Onset {
 The other significant portion of our implementation, beyond generating
 candidates, is evaluating them. This, of course, is done with constraints.
 Figure \pref{fig:impl-onset} shows our implementation of the \onset{}
-markedness constraint. On lines 2-7, we count the number of syllable
-nuclei in the input (a \texttt{SyllabifiedCandidate} from Figure
-\pref{fig:impl-deletion}). On lines 9-13, we count the number of onsets.
-Onsets and nuclei are calculated, along with other linguistic data, upon
-the creation of a \texttt{SyllabifiedCandidate}; we merely analyze them
-here. The number of violations of \onset{} is given by the number of
-nuclei minus the number of onsets. This will never be a negative number,
-because the algorithm that marks onsets and nuclei will only create one
-onset per nucleus, at most (because this is the maximum allowed by
-Yoruba).
+markedness constraint. On lines 2-7, we count the number of syllable nuclei in
+the input (a \texttt{SyllabifiedCandidate} from Figure
+\pref{fig:impl-deletion}). On lines 9-13, we count the number of onsets. Onsets
+and nuclei are calculated, along with other linguistic data, upon the creation
+of a \texttt{SyllabifiedCandidate}; we merely analyze them here. The number of
+violations of \onset{} is given by the number of nuclei minus the number of
+onsets. This will never be a negative number, because the algorithm that marks
+onsets and nuclei will only create one onset per nucleus, at most (because this
+is the maximum allowed by Yoruba).
 
 \begin{figure}[h]
 \caption{The implementation of \dep}
@@ -735,63 +736,61 @@ impl Constraint for Dep {
 \end{figure}
 
 Of course, no discussion of constraints would be complete without
-\textit{faithfulness} constraints. These present an interesting challenge,
-but we first provide an overview of the implementation, which is provided
-in Figure \pref{fig:impl-dep}. On lines 5 and 6, we respectively turn the
-original underlying form and the candidate surface form into their string
+\textit{faithfulness} constraints. These present an interesting challenge, but
+we first provide an overview of the implementation, which is provided in Figure
+\pref{fig:impl-dep}. On lines 5 and 6, we respectively turn the original
+underlying form and the candidate surface form into their string
 respresentations. We then use a diff algorithm on these strings on line 8,
-which returns a sequence of operations which could be performed on the
-original underlying form to morph it into the candidate surface form given
-as input. On lines 10-13, we count the number of insertion operations
-returned by the diff algorithm.
+which returns a sequence of operations which could be performed on the original
+underlying form to morph it into the candidate surface form given as input. On
+lines 10-13, we count the number of insertion operations returned by the diff
+algorithm.
 
-A difficult and subtle complication arises here: how does the diff
-algorithm \textit{know} what counts as an insertion, deletion, or change?
-For instance, changing \textipa{/ow\'o-k\'i-ow\'o/} into
-\textipa{[ow\'ok\'ow\'o]} is a relatively straightforward case of
-deletion. But what about \textipa{[ow\'ak\'iow\'o]}? In this case, the
-diff algorithm could decide that \textipa{[\'o]} was deleted and
-\textipa{[\'a]} inserted. Or it could instead say that \textipa{[\'o]}
-changed into \textipa{[\'a]}. Which of these occurs is linguistically
-relevant. This has not yet caused problems on real corpus data, but
-when it does, a potential solution is fine-tuning the diff algorithm
-to choose the more linguistically sound operations as outputs, making
-it aware of autosegmental phonology when it, for example, is choosing
-between a replacement operation or a insertion + deletion operations.
+A difficult and subtle complication arises here: how does the diff algorithm
+\textit{know} what counts as an insertion, deletion, or change? For instance,
+changing \textipa{/ow\'o-k\'i-ow\'o/} into \textipa{[ow\'ok\'ow\'o]} is a
+relatively straightforward case of deletion. But what about
+\textipa{[ow\'ak\'iow\'o]}? In this case, the diff algorithm could decide that
+\textipa{[\'o]} was deleted and \textipa{[\'a]} inserted. Or it could instead
+say that \textipa{[\'o]} changed into \textipa{[\'a]}. Which of these occurs is
+linguistically relevant. This has not yet caused problems on real corpus data,
+but when it does, a potential solution is fine-tuning the diff algorithm to
+choose the more linguistically sound operations as outputs, making it aware of
+autosegmental phonology when it, for example, is choosing between a replacement
+operation or a insertion + deletion operations.
 
-To this point, our descriptions have been fairly abstract, so it is best
-to illustrate with an example. Given \textipa{/ow\'o-k\'i-ow\'o/} as
-input, how would we generate a random candidate output form from it?
-And how would we evaluate it against \onset{} and \dep?
+To this point, our descriptions have been fairly abstract, so it is best to
+illustrate with an example. Given \textipa{/ow\'o-k\'i-ow\'o/} as input, how
+would we generate a random candidate output form from it? And how would we
+evaluate it against \onset{} and \dep?
 
-For the sake of simplicity, we'll perform a single deletion operation.
-To do this, we must parse \textipa{/ow\'o-k\'i-ow\'o/} from a string
-into a \texttt{SyllabifiedCandidate}. We split it into each of its
-graphemes, creating the list \{\textipa{o,w,\'o,k,\'i,o,w,\'o}\}. To
-perform a deletion, we simply choose a random element of this list,
-say, [k]. This yields \{\textipa{o,w,\'o,\'i,o,w,\'o}\}.
+For the sake of simplicity, we'll perform a single deletion operation. To do
+this, we must parse \textipa{/ow\'o-k\'i-ow\'o/} from a string into a
+\texttt{SyllabifiedCandidate}. We split it into each of its graphemes, creating
+the list \{\textipa{o,w,\'o,k,\'i,o,w,\'o}\}. To perform a deletion, we simply
+choose a random element of this list, say, [k]. This yields
+\{\textipa{o,w,\'o,\'i,o,w,\'o}\}.
 
-To find the number of \onset{} violations, we note that our list is
-annotated, internally, as \{\texttt{Nucleus}, \texttt{Onset},
-\texttt{Nucleus}, \texttt{Nucleus}, \texttt{Nucleus}, \texttt{Onset},
-\texttt{Nucleus}\}. Counting the number of nuclei, we find that there
-are 5. There are only two onsets. 5 - 2 = 3, so there are 3
-violations of \onset.
+To find the number of \onset{} violations, we note that our list is annotated,
+internally, as \{\texttt{Nucleus}, \texttt{Onset}, \texttt{Nucleus},
+\texttt{Nucleus}, \texttt{Nucleus}, \texttt{Onset}, \texttt{Nucleus}\}.
+Counting the number of nuclei, we find that there are 5. There are only two
+onsets. 5 - 2 = 3, so there are 3 violations of \onset.
 
 Finally, to count the number of \dep{} violations, we turn
 \{\textipa{o,w,\'o,\'i,o,w,\'o}\} back into the string
-[\textipa{ow\'o\'iow\'o}]. We then use a diff algorithm to determine
-the sequence of edit operations that could be used to arrive at this
-string from \textipa{/ow\'o-k\'i-ow\'o/}. In this case, it tells us
-that a single \texttt{Delete} is all that is necessary, as expected.
-This does not cause any violations of \dep{} because it is not an
-\texttt{Insert} operation, so we return 0 violations.
+[\textipa{ow\'o\'iow\'o}]. We then use a diff algorithm to determine the
+sequence of edit operations that could be used to arrive at this string from
+\textipa{/ow\'o-k\'i-ow\'o/}. In this case, it tells us that a single
+\texttt{Delete} is all that is necessary, as expected. This does not cause any
+violations of \dep{} because it is not an \texttt{Insert} operation, so we
+return 0 violations.
 
 \subsection{Analysis on corpus data}
 
 In this section we will evaluate all of our collected Yoruba underlying
-representations against the expected surface forms. The constraints
-used in our analysis, along with their rankings, are listed here:
+representations against the expected surface forms. The constraints used in our
+analysis, along with their rankings, are listed here:
 
 \begin{enumerate}
     \item
@@ -815,81 +814,65 @@ used in our analysis, along with their rankings, are listed here:
         \end{enumerate}
 \end{enumerate}
 
-The number under which each constraint is listed denotes its rank.
-For example, \ident{} and \dep{} have the highest ranking, followed
-by \onset{}, \ssp{}, and \maxc{}. This largely matches
-Fig. \pref{tableau:summary-two}, but with the inclusion of an extra
-\maxc{} constraint at rank two. This is necessary because,
-otherwise, our program (correctly) finds deleting the input form
-to be the optimal solution to the set of constraints given. That is,
-neither of the rank 1 constraints (\ident{} and \dep{}), nor the
-constraints immediately below them (\onset{} and \ssp{}), generate
-violations for deleting words. On the other hand, a form with no
-segments will \textit{always} generate less violations of \onset{}
-and \ssp{} than one which does-- the mere presence of a vowel in a
-form is sufficient to generate \ssp{} violations. Adding a \maxc{}
-constraint ranked equally to \onset{} and \ssp{} addresses this.
-Indeed, this is not an issue with our implementation, but a more
-fundamental issue with our analysis which was found by it. In that
-sense, we can see that the benefits of computationally encoding the
-analysis are already emerging.
+The number under which each constraint is listed denotes its rank. For example,
+\ident{} and \dep{} have the highest ranking, followed by \onset{}, \ssp{}, and
+\maxc{}. This largely matches Fig. \pref{tableau:summary-two}, but with the
+inclusion of an extra \maxc{} constraint at rank two. This is necessary
+because, otherwise, our program (correctly) finds deleting the input form to be
+the optimal solution to the set of constraints given. That is, neither of the
+rank 1 constraints (\ident{} and \dep{}), nor the constraints immediately below
+them (\onset{} and \ssp{}), generate violations for deleting words. On the
+other hand, a form with no segments will \textit{always} generate less
+violations of \onset{} and \ssp{} than one which does-- the mere presence of a
+vowel in a form is sufficient to generate \ssp{} violations. Adding a \maxc{}
+constraint ranked equally to \onset{} and \ssp{} addresses this. Indeed, this
+is not an issue with our implementation, but a more fundamental issue with our
+analysis which was found by it. In that sense, we can see that the benefits of
+computationally encoding the analysis are already emerging.
 
-An additional point to note is that, when evaluating candidates,
-instead of considering equally-ranked constraints individually, we
-treat violations between them cumulatively. As a result, since
-\ssp{} generates multiple violations at a time (for instance [i]
-will generate 3 violations, per Figure
-\pref{table:vowel-sonority-v2}), in order for \maxc{} to
-adequately regulate against deletion, it must generate multiple
-(specifically, 3) violations for each deletion. In addition,
-\onset{}, being equally ranked to \ssp{} and \maxc{}, must also
-do this. This quirk of our implementation is certainly
-unconventional among the OT literature, and further study might
-better support some of these choices (or provide more elegant
-alternative solutions).
+An additional point to note is that, when evaluating candidates, instead of
+considering equally-ranked constraints individually, we treat violations
+between them cumulatively. As a result, since \ssp{} generates multiple
+violations at a time (for instance [i] will generate 3 violations, per Figure
+\pref{table:vowel-sonority-v2}), in order for \maxc{} to adequately regulate
+against deletion, it must generate multiple (specifically, 3) violations for
+each deletion. In addition, \onset{}, being equally ranked to \ssp{} and
+\maxc{}, must also do this. This quirk of our implementation is certainly
+unconventional among the OT literature, and further study might better support
+some of these choices (or provide more elegant alternative solutions).
 
-Beyond these issue, our analysis is sound. Given an underlying
-Yoruba form, the program implementing it will produce the
-appropriately vowel-elided surface form. In other words, given
-the information in the `Underlying' columns of tables
-\pref{fig:deletion-simple}, \pref{fig:deletion-except-1},
-\pref{fig:deletion-except-1}, our program outputs the
-form expected in the 'Surface' columns (excepting
-\textipa{/n\'i-oko/} \rightarrow{} \textipa{[l\'oko]},
-since the n \rightarrow{} l transition occurs for reasons
-unrelated to our analysis; we also ignore tone markers
-here, because it is a related but orthogonal phenomenon
-unhandled by our original analysis).
+Beyond these issue, our analysis is sound. Given an underlying Yoruba form, the
+program implementing it will produce the appropriately vowel-elided surface
+form. In other words, given the information in the `Underlying' columns of
+tables \pref{fig:deletion-simple}, \pref{fig:deletion-except-1},
+\pref{fig:deletion-except-1}, our program outputs the form expected in the
+'Surface' columns (excepting \textipa{/n\'i-oko/} \rightarrow{}
+\textipa{[l\'oko]}, since the n \rightarrow{} l transition occurs for reasons
+unrelated to our analysis; we also ignore tone markers here, because it is a
+related but orthogonal phenomenon unhandled by our original analysis).
 
-In fact, it will even produce the intuitively expected surface
-form when given underlying forms which do not exist. For
-instance, given \textipa{[so-el\'u]} as an input, it will produce
-\textipa{/sel\'u/}, due to \maxplusv{} regulating more
-strictly against initial vowel deletion than deletion of
-final vowels.
+In fact, it will even produce the intuitively expected surface form when given
+underlying forms which do not exist. For instance, given \textipa{[so-el\'u]}
+as an input, it will produce \textipa{/sel\'u/}, due to \maxplusv{} regulating
+more strictly against initial vowel deletion than deletion of final vowels.
 
 \section{Concluding}
 
-In this paper, we presented a classic Optimality-Theoretic
-analysis of conjoined vowel elision in Yoruba. We then
-implemented it as a computer program, finding a subtle
-issue in the analysis. With these issues addressed in the
-implementation, our program outputs the correctly
-vowel-elided surface form, given an underlying
-representation. Future work could go in several interesting
-directions. Within the domain of Yoruba, the original
-analysis and its implementation could be extended to handle
-the assimilatory strategy for dealing with sequences of
-vowels at morpheme boundaries (as discussed in
-\cite{ola2002yoruba}), as well as tone. This would likely
-involve extending surface candidate generation to the full
-idealized algorithm described in Section
-\ref{subsec:approach}, contending with epenthesis,
-metathesis, and segment changes in addition to deletion.
-The implementation, as it exists, faithfully models the
-parts of the algorithm in \ref{subsec:approach} that are
-necessary in the context of Yoruba, so this would largely
-be a case of extending the existing machinery.
+In this paper, we presented a classic Optimality-Theoretic analysis of
+conjoined vowel elision in Yoruba. We then implemented it as a computer
+program, finding a subtle issue in the analysis. With these issues addressed in
+the implementation, our program outputs the correctly vowel-elided surface
+form, given an underlying representation. Future work could go in several
+interesting directions. Within the domain of Yoruba, the original analysis and
+its implementation could be extended to handle the assimilatory strategy for
+dealing with sequences of vowels at morpheme boundaries (as discussed in
+\cite{ola2002yoruba}), as well as tone. This would likely involve extending
+surface candidate generation to the full idealized algorithm described in
+Section \ref{subsec:approach}, contending with epenthesis, metathesis, and
+segment changes in addition to deletion. The implementation, as it exists,
+faithfully models the parts of the algorithm in \ref{subsec:approach} that are
+necessary in the context of Yoruba, so this would largely be a case of
+extending the existing machinery.
 
 \pagebreak
 
