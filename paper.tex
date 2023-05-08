@@ -55,7 +55,8 @@ two primary strategies employed by the language for resolving sequences of two
 or more vowels that occur at the boundary of two adjoined morphemes
 (sequences of two vowels do not generally appear in Yoruba words due to
 syllable structure constraints). This text will specifically explore the
-second strategy of deletion, and in doing so, will specially attempt to provide
+second strategy of deletion (in particular, ignoring tone markers as a related
+but orthogonal case), and in doing so, will specially attempt to provide
 an analysis that is simple enough to be feasible to verify computationally. That
 is, once we have developed our analysis, the core contribution of this work
 will be to encode it as a computer program so it can be quickly and easily
@@ -786,7 +787,7 @@ sequence of edit operations that could be used to arrive at this string from
 violations of \dep{} because it is not an \texttt{Insert} operation, so we
 return 0 violations.
 
-\subsection{Analysis on corpus data}
+\subsection{Performance Analysis on Corpus Data}
 
 In this section we will evaluate all of our collected Yoruba underlying
 representations against the expected surface forms. The constraints used in our
@@ -860,7 +861,8 @@ more strictly against initial vowel deletion than deletion of final vowels.
 
 In this paper, we presented a classic Optimality-Theoretic analysis of
 conjoined vowel elision in Yoruba. We then implemented it as a computer
-program, finding a subtle issue in the analysis. With these issues addressed in
+program, finding a subtle issue in the analysis in doing so. With these issues
+addressed in
 the implementation, our program outputs the correctly vowel-elided surface
 form, given an underlying representation. Future work could go in several
 interesting directions. Within the domain of Yoruba, the original analysis and
@@ -872,7 +874,12 @@ Section \ref{subsec:approach}, contending with epenthesis, metathesis, and
 segment changes in addition to deletion. The implementation, as it exists,
 faithfully models the parts of the algorithm in \ref{subsec:approach} that are
 necessary in the context of Yoruba, so this would largely be a case of
-extending the existing machinery.
+extending the existing machinery. To conclude, we have found that encoding our
+conventional Optimality-Theoretic analysis computationally was highly effective
+at identifying weaknesses and oversights, and at affirming its soundness after
+addressing them. Optimality Theory lends itself quite naturally to computational
+interpretations, and given our encouraging results, we look forward to the rich
+body of work that lies ahead.
 
 \pagebreak
 
